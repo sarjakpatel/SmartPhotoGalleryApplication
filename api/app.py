@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Mar 11 16:34:11 2023
-
-@author: HP
-"""
-
 #reference: https://medium.com/makedeveasy/authenitcation-using-python-flask-and-firestore-1958d29e2240
 
 import os
@@ -15,11 +8,9 @@ import pyrebase
 from flask_cors import CORS
 import io
 import json
-
 from firebase_admin import auth
 
 
-#auth = auth()
 app=Flask(__name__)
 cred = credentials.Certificate("fbAdminConfig.json")
 default_app=firebase_admin.initialize_app(cred)
@@ -54,9 +45,9 @@ def signup():
             if(emailexists.uid):
                 return jsonify({'message': 'user already exists '}),400
         else:
-            return jsonify({'message': 'error creating in user'}),400
+            return jsonify({'message': 'error creating in user'}),401
 
-@app.route('/signin',methods=['POST'])
+@app.route('/login',methods=['POST'])
 #@app.route('/signin',methods=['POST'])  #signin api
 def signin():
     email=request.json['email'] 
@@ -78,9 +69,9 @@ def signin():
         if user3:
             return user
         else:
-            return jsonify({'message':'please verify your account with your mailId'}),400
+            return jsonify({'message':'please verify your account with your mailId'}),401
     except:
-        return jsonify({'message':'invalid crendentails or user does not exist'}),400
+        return jsonify({'message':'invalid crendentails or user does not exist'}),403
 if __name__ == '__main__':
     app.run(debug=True)
 
