@@ -8,10 +8,10 @@ import Login from './auth/login/Login';
 import Auth from './auth/Auth';
 import App from './App';
 import ProtectedRoute from './util/ProtectedRoute';
-import Home from './portal/home/Home';
 import SignUp from './auth/login/SignUp';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Home from './comps/Home';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
