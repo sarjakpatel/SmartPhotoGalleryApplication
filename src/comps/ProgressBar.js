@@ -4,8 +4,16 @@ import { motion } from 'framer-motion';
 
 const ProgressBar = ({ file, setFile }) => {
   const { progress, url } = useStorage(file);
+  console.log("abcd");
 
   useEffect(() => {
+
+    console.log("progress bar rendered");
+
+  }, []);
+
+  useEffect(() => {
+    console.log("progrss bar", url, file);
     if (url) {
       setFile(null);
     }
