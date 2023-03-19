@@ -6,10 +6,9 @@ const useStorage = (file) => {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
   const [url, setUrl] = useState(null);
-  console.log("defg");
+  
   useEffect(() => {
     // references
-    console.log("useEffect", file);
     const storageRef = projectStorage.ref(file.name);
     const collectionRef = projectFirestore.collection('userDetails/'+globalVariable.email+'/children');
     
@@ -21,7 +20,6 @@ const useStorage = (file) => {
     }, async () => {
         
       const url = await storageRef.getDownloadURL();
-      console.log(url);
       const createdAt = timestamp();
 
       await collectionRef.add({ url, createdAt });

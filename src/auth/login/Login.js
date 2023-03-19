@@ -24,7 +24,7 @@ const Login = () => {
         .then((response) => {
             btnPointer.innerHTML = 'Login';
             btnPointer.removeAttribute('disabled');
-            console.log(response);
+            
             if(response.status == 200){
                 const data = response.data;
                 const token = data.idToken;
