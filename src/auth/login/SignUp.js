@@ -3,6 +3,8 @@ import React from "react";
 import {Button, Col, Container, Form, FormGroup, FormLabel, Row } from "react-bootstrap";
 import {Link, useNavigate } from "react-router-dom";
 import {toast } from 'react-toastify';
+import { projectFirestore } from "../../firebase/config";
+import { doc, setDoc } from "firebase/firestore"; 
 
 const SignUp = () => {
 
@@ -10,7 +12,9 @@ const SignUp = () => {
     const navigate = useNavigate();
 
     const submitSignUpForm = (event) => {
+        
         event.preventDefault();
+        
         const formElement = document.querySelector('#signUpForm');
         const formData = new FormData(formElement);
         const formDataJSON = Object.fromEntries(formData);
@@ -20,10 +24,12 @@ const SignUp = () => {
         
         axios.post(signUpAPI, formDataJSON)
         .then((response) => {
+            
             btnPointer.innerHTML = 'Register';
             btnPointer.removeAttribute('disabled');
             const data = response.data;
             const token = data.idToken;
+            
             if (!token) {
                
                 toast.error('Unable to create a User, Please try again after some time!!', {
@@ -38,7 +44,8 @@ const SignUp = () => {
                     });
                 return;
             }
-            setTimeout(() => {
+            
+            setTimeout(async () => {
 
                 toast.success('Please verify your email!!',{
                     position: "top-center",
@@ -50,7 +57,15 @@ const SignUp = () => {
                     progress: undefined,
                     theme: "colored",
                 });
+
+                await setDoc(doc(projectFirestore, "userDetails", formDataJSON.email), {
+                    "email": formDataJSON.email, 
+                    "firstName": formDataJSON.firstName,
+                    "lastName": formDataJSON.lastName  
+                });
+
                 navigate('/auth/login');
+            
             }, 500);
 
         }).catch((error) => {
@@ -69,7 +84,6 @@ const SignUp = () => {
                     progress: undefined,
                     theme: "colored",
                     });
-                // alert('Unable to login. Please try after some time.');
                 return;
             }
             else{
@@ -90,10 +104,18 @@ const SignUp = () => {
     return (
         <React.Fragment>
             <Container className="my-5">
-                <h2 className="fw-normal mb-5">Register to Smart Photo Gallery Application</h2>
+                <h2 className="fw-normal mb-5">Register</h2>
                 <Row>
                     <Col md={{span: 6}}>
                         <Form id="signUpForm" onSubmit={submitSignUpForm}>
+                            <FormGroup className="mb-3">
+                                <FormLabel htmlFor={'signup-firstName'}>First Name:</FormLabel>
+                                <input type={'text'} className="form-control" id={'signup-firstName'} name="firstName" required />
+                            </FormGroup>
+                            <FormGroup className="mb-3">
+                                <FormLabel htmlFor={'signup-lastName'}>Last Name:</FormLabel>
+                                <input type={'text'} className="form-control" id={'signup-lastName'} name="lastName" required />
+                            </FormGroup>
                             <FormGroup className="mb-3">
                                 <FormLabel htmlFor={'signup-username'}>Email</FormLabel>
                                 <input type={'text'} className="form-control" id={'signup-username'} name="email" required />

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
-import PortalFooter from "./portal/footer/PortalFooter";
-import PortalNavbar from "./portal/navbar/PortalNavbar";
-import { ToastContainer, toast } from 'react-toastify';
+import PortalFooter from "./comps/footer/PortalFooter";
+import PortalNavbar from "./comps/navbar/PortalNavbar";
 import 'react-toastify/dist/ReactToastify.css';
 
 function App() {

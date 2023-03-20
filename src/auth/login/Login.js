@@ -4,6 +4,7 @@ import { Button, Col, Container, Form, FormGroup, FormLabel, Row } from "react-b
 import { Link, useNavigate } from "react-router-dom";
 import {toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import globalVariable from "../../globalVariable";
 
 const Login = () => {
 
@@ -23,7 +24,7 @@ const Login = () => {
         .then((response) => {
             btnPointer.innerHTML = 'Login';
             btnPointer.removeAttribute('disabled');
-            console.log(response);
+            
             if(response.status == 200){
                 const data = response.data;
                 const token = data.idToken;
@@ -56,6 +57,7 @@ const Login = () => {
                         progress: undefined,
                         theme: "colored",
                         });
+                    globalVariable.email = formDataJSON.email;
                     navigate('/');
                 }, 500);
             }
@@ -98,7 +100,7 @@ const Login = () => {
     return (
         <React.Fragment>
             <Container className="my-5">
-                <h2 className="fw-normal mb-5">Login to Smart Photo Gallery Application</h2>
+                <h2 className="fw-normal mb-5">Login</h2>
                 <Row>
                     <Col md={{span: 6}}>
                         <Form id="loginForm" onSubmit={submitLoginForm}>

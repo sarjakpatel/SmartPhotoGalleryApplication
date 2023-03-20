@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
@@ -8,14 +8,14 @@ import Login from './auth/login/Login';
 import Auth from './auth/Auth';
 import App from './App';
 import ProtectedRoute from './util/ProtectedRoute';
-import Home from './portal/home/Home';
 import SignUp from './auth/login/SignUp';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Home from './comps/Home';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
 root.render(
-	<React.StrictMode>
 		<BrowserRouter basename={'/'}>
 			<Routes>
 				<Route path='/auth' element={<Auth />}>
@@ -54,7 +54,6 @@ root.render(
 				theme="colored"
 				/>
 		</BrowserRouter>
-	</React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function
