@@ -12,12 +12,12 @@ from firebase_admin import auth
 
 
 app=Flask(__name__)
-cred = credentials.Certificate("fbAdminConfig.json")
+cred = credentials.Certificate("/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbAdminConfig.json")
 default_app=firebase_admin.initialize_app(cred)
 CORS(app)
 db = firestore.client()
 todo_ref=db.collection('todos')  #sample collections
-pb = pyrebase.initialize_app(json.load(open('fbconfig.json')))
+pb = pyrebase.initialize_app(json.load(open('/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbconfig.json')))
 
 
 @app.route("/")  #basic api
