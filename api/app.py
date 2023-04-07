@@ -5,6 +5,7 @@
 import os
 import io
 import json
+from functools import wraps
 
 from flask import Flask, request, jsonify, redirect, session
 from firebase_admin import credentials, firestore, initialize_app, auth
@@ -18,10 +19,12 @@ from face_encodings import search_similar_image, store_encodings
 
 app = Flask(__name__)
 
-cred = credentials.Certificate("fbAdminConfig.json")
+firebase_admin.delete_app(firebase_admin.get_app())
+
+cred = credentials.Certificate('fbAdminConfig.json')
 default_app = firebase_admin.initialize_app(cred)
 
-auth = auth()
+#auth = auth()
 
 CORS(app)
 
@@ -110,61 +113,66 @@ def login():
     except:
         return jsonify({'message':'invalid crendentails or user does not exist'}),403
 
-
+'''
 #logout api
 
 @app.route("/logout")
 
 def logout():
     #remove the token setting the user to None
-    auth.current_user = None
-
-    session.clear()
+    session.pop('username')
     return redirect("/login")
+
+'''
 
 
 #to protect routes
 
 def isAuthenticated(f):
-
-    if not auth.current_user != None:
-        return redirect('/login')
+  @wraps(f)
+  def decorated_function(*args, **kwargs):
+      #check for the variable that pyrebase creates
+      if not firebase.auth() != None:
+          return redirect('/login')
+      return f(*args, **kwargs)
+  return decorated_function
     
   
-
-
-
-
-
 
 #compute and store encodings to firebase
 
 @app.route('/store-encodings', methods = ['POST'])
 @isAuthenticated
 
-def store_encodings(email, image_url):
+def store_encodings1():
+
+    email = request.json['email'] 
+    image_url = request.json['image_url']
     
     is_encoding_stored = store_encodings(email, image_url)
 
-    if not is_encoding_stored:
+    if is_encoding_stored == 'error':
 
-        return jsonify({'message': 'error in storing encodings'}), 401
+        return jsonify({'message': 'no encodings found in the image'}), 200
+    
+    return jsonify({'message': 'stored encodings'}), 200
     
 
     
 
 #image search based on face detection
 
-@app.route('/image-search', method = ['POST'])
+@app.route('/image-search', methods = ['POST'])
 @isAuthenticated
 
-def search_similar_image1(email, image_url):
+def search_similar_image1():
+
+    email = request.json['email'] 
+    image_url = request.json['image_url']
 
     result = search_similar_image(email, image_url)
 
-    return result
-
-
+    return jsonify({'list of similar images': result}), 200
 
 
 

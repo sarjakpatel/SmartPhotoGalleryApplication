@@ -13,12 +13,21 @@ import json
 
 #face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 
+#cred_path = "C:/Rajvi/Project/Smart Gallery Photo Application/user-authentication/fbAdminConfig.json"
+cred_file_path = "fbAdminConfig.json"
+cred = credentials.Certificate(cred_file_path)
+firebase_admin.initialize_app(cred)
+
+# this connects to our Firestore database
+db = firestore.client() 
+
 #cascade_file_path = "C:/Users/HP/Downloads/data/haarcascades/haarcascade_frontalface_alt2.xml"
 cascade_file_path = r"cascades/data/haarcascades/haarcascade_frontalface_alt2.xml"
 face_cascade = cv2.CascadeClassifier(cascade_file_path)
 
-email = 'rajvi.shah@sjsu.edu'
-url = 'https://firebasestorage.googleapis.com/v0/b/user-auth-42504.appspot.com/o/IMG_20220530_092140.jpg?alt=media&token=2535b011-e8dc-45ec-a57c-4f8e70096be4'
+
+#email = 'rajvi.shah@sjsu.edu'
+#url = 'https://firebasestorage.googleapis.com/v0/b/user-auth-42504.appspot.com/o/IMG_20220530_092140.jpg?alt=media&token=2535b011-e8dc-45ec-a57c-4f8e70096be4'
 
 
 
@@ -63,18 +72,10 @@ def compute_face_encodings(url):
 #print(compute_face_encodings(url))
 
 
-cred_path = "C:/Rajvi/Project/Smart Gallery Photo Application/user-authentication/fbAdminConfig.json"
-
-cred = credentials.Certificate(cred_path)
-firebase_admin.initialize_app(cred)
-
-# this connects to our Firestore database
-db = firestore.client()  
-
 def store_encodings(email, image_url):
     
 
-    encodings = compute_face_encodings(url)
+    encodings = compute_face_encodings(image_url)
 
     print('Computed face encodings/ Face detected in the given image url:', len(encodings))
 
@@ -107,19 +108,19 @@ def store_encodings(email, image_url):
             if encoding in prev_stored_encodings.items():
                 
                 key = str(prev_stored_encodings.items(encoding))
-                value = firestore.ArrayUnion([url])
+                value = firestore.ArrayUnion([image_url])
                 
                 url_ref.update({key: value})
                 print('Updated url as current encoding already exists')
-                return True
+                return 'done'
             #if new encoding then add encoding and url
             else:
                 
                 key = str(length)
                 encoding_ref.update({key : encoding})
-                url_ref.update({key : url})
+                url_ref.update({key : image_url})
                 print('Added encoding and url to the firebase')
-                return True
+                return 'done'
 
         
         #when the first encoding is stored in a user's account
@@ -127,25 +128,19 @@ def store_encodings(email, image_url):
             
             key = '0'
             encoding_ref.set({key : encoding})
-            url_ref.set({key : url})
+            url_ref.set({key : image_url})
             print('Added first encoding and url')
-            return True
+            return 'done'
 
-    return False
+    return 'error'
             
-#cred_path = "C:/Rajvi/Project/Smart Gallery Photo Application/user-authentication/fbAdminConfig.json"
-
-cred = credentials.Certificate(fbAdminConfig.json)
-firebase_admin.initialize_app(cred)
-
-# this connects to our Firestore database
-db = firestore.client()  
+ 
 
 def search_similar_image(email, image_url):
 
 
     face_encoding1 = compute_face_encodings(image_url)
-    print(type(face_encoding1))
+    #print(type(face_encoding1))
     print('Computed face encodings for a given image url')
     
     doc_ref = db.collection("userDetails").document(email).collection("data")
