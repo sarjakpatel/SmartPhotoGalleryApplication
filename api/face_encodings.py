@@ -1,3 +1,4 @@
+#libraries
 #to compute encodings
 import cv2
 import face_recognition
@@ -10,10 +11,11 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import numpy
 import json
+import pyrebase
 
-#face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 
-#cred_path = "C:/Rajvi/Project/Smart Gallery Photo Application/user-authentication/fbAdminConfig.json"
+
+
 cred_file_path = "fbAdminConfig.json"
 cred = credentials.Certificate(cred_file_path)
 firebase_admin.initialize_app(cred)
@@ -21,10 +23,12 @@ firebase_admin.initialize_app(cred)
 # this connects to our Firestore database
 db = firestore.client() 
 
+firebase = pyrebase.initialize_app(json.load(open('fbconfig.json')))
+storage = firebase.storage()
+
 #cascade_file_path = "C:/Users/HP/Downloads/data/haarcascades/haarcascade_frontalface_alt2.xml"
 cascade_file_path = r"cascades/data/haarcascades/haarcascade_frontalface_alt2.xml"
 face_cascade = cv2.CascadeClassifier(cascade_file_path)
-
 
 #email = 'rajvi.shah@sjsu.edu'
 #url = 'https://firebasestorage.googleapis.com/v0/b/user-auth-42504.appspot.com/o/IMG_20220530_092140.jpg?alt=media&token=2535b011-e8dc-45ec-a57c-4f8e70096be4'
@@ -34,9 +38,7 @@ face_cascade = cv2.CascadeClassifier(cascade_file_path)
 def compute_face_encodings(url):
 
     img = Image.open(requests.get(url, stream=True).raw)
-    
     img = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-    
 
     #img = cv2.imread(opencvImage)
     grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -48,6 +50,8 @@ def compute_face_encodings(url):
         cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 5)
 
     #print(len(faces))
+    
+    print('Number of faces detected:', len(faces))
 
     if (len(faces) == 1):
         
@@ -55,6 +59,8 @@ def compute_face_encodings(url):
         boxes = [(y, x + w, y + h, x) for (x, y, w, h) in faces]
 
         encoding = face_recognition.face_encodings(rgb, boxes)
+
+        print('Computed encodings')
     
         return encoding
     
@@ -63,11 +69,12 @@ def compute_face_encodings(url):
         boxes = [(y, x + w, y + h, x) for (x, y, w, h) in faces]
 
         encoding = face_recognition.face_encodings(rgb, boxes)
+
+        print('Computed encodings')
         
         return encoding #returns ndarray
 
 
-       
 
 #print(compute_face_encodings(url))
 
@@ -83,14 +90,14 @@ def store_encodings(email, image_url):
     doc_ref = db.collection("userDetails").document(email).collection("data")
 
     # Add documents to the subcollection.
-    encoding_ref = doc_ref.document("encodings")
+    encoding_ref = doc_ref.document("image_encodings")
     prev_stored_encodings = encoding_ref.get().to_dict()
     #print(type(prev_stored_encodings))
-    print('Previously stored image encodings in firebase:', len(prev_stored_encodings))
+    #print('Previously stored image encodings in firebase:', len(prev_stored_encodings))
 
     url_ref = doc_ref.document("image_urls")
     prev_stored_urls = url_ref.get().to_dict()
-    print('Previously stored image urls in firebase:', len(prev_stored_urls))
+    #print('Previously stored image urls in firebase:', len(prev_stored_urls))
 
 
     for encoding in encodings:
@@ -132,67 +139,203 @@ def store_encodings(email, image_url):
             print('Added first encoding and url')
             return 'done'
 
-    return 'error'
+    return 'error in storing image encodings'
             
  
+#Note: edit for more than 1 faces comparison
 
 def search_similar_image(email, image_url):
 
 
-    face_encoding1 = compute_face_encodings(image_url)
+    faces = compute_face_encodings(image_url)
     #print(type(face_encoding1))
+
     print('Computed face encodings for a given image url')
     
+    faces1 = len(faces)
+
     doc_ref = db.collection("userDetails").document(email).collection("data")
 
     print('Database connected')
     # Add documents to the subcollection.
-    encoding_ref = doc_ref.document("encodings")
+    encoding_ref = doc_ref.document("image_encodings")
     stored_encodings = encoding_ref.get().to_dict()
 
     url_ref = doc_ref.document("image_urls")
     stored_urls = url_ref.get().to_dict()
 
     list_of_encodings = []
-
     
-    for encoding in stored_encodings.values():
-        #print(encoding)
-        encoding = encoding.replace('[', '').replace(']', '').replace('\n', '')
-        
-        new_encoding = list(encoding.split(","))
-        new_encoding1 = [eval(i) for i in new_encoding]
-        list_of_encodings.append(new_encoding1)
-
-    print('Collected all encodings from the firebase')
-    #print(list_of_encodings)
-
-    list_of_urls = []
-    for url in stored_urls.values():
-        list_of_urls.append(url)
-    print('Collected all urls from the firebase')
-    
-    #print(list_of_urls)
-
+    is_match = False
     output_urls = []
-    for face_encoding2 in list_of_encodings:
-        count = 0
-        
-        face_encoding1 = numpy.array(face_encoding1)
-        face_encoding2 = numpy.array(face_encoding2)
 
-        matches = face_recognition.compare_faces(face_encoding1, face_encoding2, tolerance = 0.5)
-        is_match = any(matches)
-        
-        print('Are faces matching:', is_match)
+    if stored_encodings:
 
-        if is_match:
-            current_url = list_of_urls[count]
-            output_urls.append(current_url)
-        
-        count += 1
+        for encoding in stored_encodings.values():
+            #print(encoding)
+            encoding = encoding.replace('[', '').replace(']', '').replace('\n', '')
+            
+            new_encoding = list(encoding.split(","))
+            new_encoding1 = [eval(i) for i in new_encoding]
+            list_of_encodings.append(new_encoding1)
 
-    return output_urls
+        print('Collected all encodings from the firebase')
+        #print(list_of_encodings)
+
+        list_of_urls = []
+        for url in stored_urls.values():
+            list_of_urls.append(url)
+        print('Collected all urls from the firebase')
+        
+        #print(list_of_urls)
+
+        
+        
+
+        for face_encoding1 in faces:
+            count = 0
+            #print(face_encoding1)
+            for face_encoding2 in list_of_encodings:
+                
+                
+                face_encoding1 = numpy.array(face_encoding1)
+                face_encoding2 = numpy.array(face_encoding2)
+
+                matches = face_recognition.compare_faces([face_encoding1], face_encoding2, tolerance = 0.5)
+                is_match = any(matches)
+                
+                print('Are faces matching:', is_match)
+
+                if is_match:
+                    current_url = list_of_urls[count]
+                    output_urls.append(current_url)
+                
+                count += 1
+
+    return output_urls, is_match
 
 #print(search_similar_image(email, url))
+
+
+
+def store_cropped_image(email, image_url):
+
+    img_format = Image.open(requests.get(image_url, stream=True).raw)
+    
+    img = cv2.cvtColor(numpy.array(img_format), cv2.COLOR_RGB2BGR)
+    
+
+    #img = cv2.imread(opencvImage)
+    grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+    faces = face_cascade.detectMultiScale(grey, scaleFactor=1.3, minNeighbors=8)
+    #print(faces)
+
+    #print(len(faces))
+
+    if (len(faces) >= 0):
+        urls = []
+
+        for i in range(len(faces)):
+            (x, y, w, h) = faces[i]
+            cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 5)
+        
+        
+            #boxes = [(y, x + w, y + h, x) for (x, y, w, h) in faces]
+            #boxes = (y, x + w, y + h, x)
+
+            face = img[y:y + h, x:x + w]
+
+            url_ref = db.collection("userDetails").document(email).collection("data")
+            # Add documents to the subcollection.
+            url1_ref = url_ref.document("cropped_face_url")
+            prev_stored_urls = url1_ref.get().to_dict()
+
+            if prev_stored_urls:
+                length = len(prev_stored_urls)
+
+            else:
+                length = 0
+            
+            file_path = email + "_face_" + str(length) + ".jpg"
+        
+            cv2.imwrite(file_path, face)
+
+            storage.child(file_path).put(file_path)
+
+            # Get url of image
+            email1 = "rajvi.shah@sjsu.edu"
+            password = "password"
+            user = firebase.auth().sign_in_with_email_and_password(email1, password)
+            url = storage.child(file_path).get_url(user['idToken'])
+            #print(url)
+            urls.append(url)
+
+            #store face url to firebase db
+            if prev_stored_urls:
+                length = len(prev_stored_urls)
+                key = str(length)
+                url1_ref.update({key : url})
+            
+                print('Added face url to the firebase db')
+                #return 'done'
+
+        
+            #when the first encoding is stored in a user's account
+            else:
+                
+                key = '0'
+                url1_ref.set({key : url})
+                
+                print('Added first face url to the firebase db')
+                #return 'done'
+                        
+        return urls
+        
+    else:
+        
+        #no faces encoded
+        return 'no faces encoded'
+    
+
+#email = 'rajvi.shah@sjsu.edu'
+#url = 'https://firebasestorage.googleapis.com/v0/b/user-auth-42504.appspot.com/o/PXL_20220530_230758585.jpg?alt=media&token=907fcb92-bdcb-4dc3-8423-1af7841cb051'
+#print(store_cropped_image(email, url))
+
+def check_face_encodings(email, image_url):
+
+    urls, is_match = search_similar_image(email, image_url)
+
+    print('Face matched?', is_match)
+    
+    if is_match:
+        ans = store_encodings(email, image_url)
+        print('Stored new encodings')
+
+        #returns 'done' or 'error'
+        return ans
+    
+
+    else:
+        ans = store_cropped_image(email, image_url)
+        print('Stored cropped image to firebase storage')
+
+        ans1 = store_encodings(email, image_url)
+        print('Stored new encodings')
+        
+        if ans== 'Done' and ans1=='Done':
+            ans2 = 'Done'
+        else:
+            ans2 = 'Error'
+        
+        return ans2
+
+        
+
+
+
+
+
+
 

@@ -13,7 +13,7 @@ import firebase_admin
 from flask_cors import CORS
 import pyrebase
 
-from face_encodings import search_similar_image, store_encodings
+from face_encodings import search_similar_image, store_encodings, check_face_encodings
 
 
 
@@ -149,7 +149,9 @@ def store_encodings1():
     email = request.json['email'] 
     image_url = request.json['image_url']
     
-    is_encoding_stored = store_encodings(email, image_url)
+    #is_encoding_stored = store_encodings(email, image_url)
+
+    is_encoding_stored = check_face_encodings(email, image_url)
 
     if is_encoding_stored == 'error':
 
@@ -160,7 +162,9 @@ def store_encodings1():
 
     
 
-#image search based on face detection
+#image search based on face detection AND people classification
+#for image search -> input: image url uploaded by the user
+#classification -> input: face_url clicked by the user on the feature page
 
 @app.route('/image-search', methods = ['POST'])
 @isAuthenticated
@@ -173,8 +177,6 @@ def search_similar_image1():
     result = search_similar_image(email, image_url)
 
     return jsonify({'list of similar images': result}), 200
-
-
 
 
 if __name__ == '__main__':
