@@ -36,9 +36,14 @@ face_cascade = cv2.CascadeClassifier(cascade_file_path)
 
 
 def compute_face_encodings(url):
+    if 'http' in url:
 
-    img = Image.open(requests.get(url, stream=True).raw)
-    img = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+        img = Image.open(requests.get(url, stream=True).raw)
+
+        img = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+    
+    else:
+        img = cv2.imread(url)
 
     #img = cv2.imread(opencvImage)
     grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -166,7 +171,7 @@ def search_similar_image(email, image_url):
 
     list_of_encodings = []
     
-    is_match = False
+    is_match1 = False
     output_urls = []
 
     if stored_encodings:
@@ -209,10 +214,11 @@ def search_similar_image(email, image_url):
                 if is_match:
                     current_url = list_of_urls[count]
                     output_urls.append(current_url)
+                    is_match1 = True
                 
                 count += 1
 
-    return output_urls, is_match
+    return output_urls, is_match1
 
 #print(search_similar_image(email, url))
 
