@@ -133,13 +133,13 @@ def store_cropped_image(email, image_url):
             
             file_path = email + "_face_" + str(length) + ".jpg"
         
-            #cv2.imwrite(file_path, face)
+            cv2.imwrite(file_path, face)
             
             #os.rename(face, file_path)
 
-            im = Image.fromarray(face)
+            #im = Image.fromarray(face)
 
-            storage.child(file_path).put(im.save(file_path))
+            storage.child(file_path).put(file_path)
 
             # Get url of image
             email1 = "rajvi.shah@sjsu.edu"
