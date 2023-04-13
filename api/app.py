@@ -12,10 +12,13 @@ from firebase_admin import credentials, firestore, initialize_app, auth
 import firebase_admin
 from flask_cors import CORS
 import pyrebase
+from werkzeug.utils import secure_filename
 
-from face_encodings import search_similar_image, store_encodings, check_face_encodings
+#from face_encodings import search_similar_image, store_encodings, check_face_encodings
+from data import check_encodings, search_similar_image
 
-
+import cv2
+import numpy
 
 app = Flask(__name__)
 
@@ -148,23 +151,28 @@ def store_encodings1():
 
     email = request.json['email'] 
     image_url = request.json['image_url']
+
+    if email is None and image_url is None:
+        return jsonify({'message': 'email and image_url must not to be empty'}), 400
+    
+    elif email is None:
+        return jsonify({'message': 'email must not to be empty'}), 400
+    
+    elif image_url is None:
+        return jsonify({'message': 'enter image_url'}), 400
     
     #is_encoding_stored = store_encodings(email, image_url)
 
-    is_encoding_stored = check_face_encodings(email, image_url)
+    elif email and image_url:
 
-    if is_encoding_stored == 'error':
+        is_encoding_stored = check_encodings(email, image_url)
 
-        return jsonify({'message': 'no encodings found in the image'}), 200
-    
-    return jsonify({'message': 'stored encodings'}), 200
-    
+        if is_encoding_stored:
+            return jsonify({'message': 'stored encodings'}), 200
+        
+        else:
+            return jsonify({'message': 'no encodings found in the image'}), 204
 
-    
-
-#image search based on face detection AND people classification
-#for image search -> input: image url uploaded by the user
-#classification -> input: face_url clicked by the user on the feature page
 
 @app.route('/image-search', methods = ['POST'])
 @isAuthenticated
@@ -172,11 +180,24 @@ def store_encodings1():
 def search_similar_image1():
 
     email = request.json['email'] 
-    image_url = request.json['image_url']
+    #email = 'rajvi.shah@sjsu.edu'
+    #file = request.files['file']
+    img_matrix = cv2.imdecode(numpy.fromstring(request.files['file'].read(), numpy.uint8), cv2.IMREAD_UNCHANGED)
 
-    result = search_similar_image(email, image_url)
+    if email is None and img_matrix is None:
+        return jsonify({'message': 'email must not to be empty and upload file'}), 400
+    
+    elif email is None:
+        return jsonify({'message': 'email must not to be empty'}), 400
+    
+    elif img_matrix is None:
+        return jsonify({'message': 'upload file'}), 400
 
-    return jsonify({'list of similar images': result}), 200
+    elif email and img_matrix:
+        output_urls, keys, match1 = search_similar_image(email, img_matrix)
+        
+
+        return jsonify({'list of similar images': output_urls}), 200
 
 
 if __name__ == '__main__':
