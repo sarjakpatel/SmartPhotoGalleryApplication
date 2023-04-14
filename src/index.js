@@ -53,7 +53,6 @@ root.render(
 							<TextExtraction />
 						</ProtectedRoute>
 					} />
-	
 				</Route>
 			</Routes>
 			<ToastContainer
