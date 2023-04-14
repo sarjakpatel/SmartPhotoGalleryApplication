@@ -6,8 +6,11 @@ import os
 import io
 import json
 from functools import wraps
+from tkinter import Image
+from emotionDetection import compute_emotion
+from faceAnalysis import analyze_face
 
-from flask import Flask, request, jsonify, redirect, session, send_file
+from flask import Flask, request, jsonify, redirect, session
 from firebase_admin import credentials, firestore, initialize_app, auth
 import firebase_admin
 from flask_cors import CORS
@@ -209,9 +212,10 @@ def search_similar_image1():
 
         return jsonify({'list of similar images': output_urls}), 200
 
-@app.route('/deblur-image', methods = ['POST'])
 
-def deblur_image():
+@app.route('/face-analysis', methods = ['POST'])
+@isAuthenticated
+def face_analysis():
     image = Image.open(request.files['file'])
     if image is None:
         return jsonify({'message': 'upload file'}), 400
@@ -219,8 +223,15 @@ def deblur_image():
         img = deblur_image1(image)
 
         return jsonify({'Output': img}), 200
-        #return send_file(img)
-    
+        
+@app.route('/detect-emotion', methods = ['POST'])
+@isAuthenticated
+def detect_emotion():
+    image = Image.open(request.files['file'])
+    if image is None:
+        return jsonify({'message': 'upload file'}), 400
+    return compute_emotion(image)
+        
 
 ###########################################################################
 
@@ -242,4 +253,3 @@ def get_text():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
