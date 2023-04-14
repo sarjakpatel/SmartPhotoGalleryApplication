@@ -39,6 +39,11 @@ root.render(
 							<Home />
 						</ProtectedRoute>
 					} />
+					<Route path='OCR' element={
+						<ProtectedRoute>
+							<Home />
+						</ProtectedRoute>
+					} />
 				</Route>
 			</Routes>
 			<ToastContainer
