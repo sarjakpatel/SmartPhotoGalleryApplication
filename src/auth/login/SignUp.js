@@ -72,7 +72,7 @@ const SignUp = () => {
             btnPointer.innerHTML = 'Register';
             btnPointer.removeAttribute('disabled');
             
-            if(error.response.status == 400){
+            if(error.response.status === 400){
 
                 toast.info('User Already Exists!!', {
                     position: "top-center",
