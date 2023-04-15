@@ -1,20 +1,17 @@
 #reference: https://medium.com/makedeveasy/authenitcation-using-python-flask-and-firestore-1958d29e2240
 
-import os
+# import os
 from flask import Flask, request, jsonify
 from firebase_admin import credentials, firestore, initialize_app
 import firebase_admin
 import pyrebase
-<<<<<<< Updated upstream
-from flask_cors import CORS
-import io
-import json
-from firebase_admin import auth
-=======
 from werkzeug.utils import secure_filename
 import os  
+import json
 from flask import Flask, render_template, request
 from ocr_core import ocr_core
+from flask_cors import CORS
+from functools import wraps
 
 #from face_encodings import search_similar_image, store_encodings, check_face_encodings
 from data import check_encodings, search_similar_image
@@ -28,24 +25,20 @@ firebase_admin.delete_app(firebase_admin.get_app())
 
 cred = credentials.Certificate('/home/vishnu-yeruva/Documents/Edu/CMPE 295-B/Project/api/fbAdminConfig.json')
 default_app = firebase_admin.initialize_app(cred)
->>>>>>> Stashed changes
 
 
 app=Flask(__name__)
-cred = credentials.Certificate("/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbAdminConfig.json")
-default_app=firebase_admin.initialize_app(cred)
+cred = credentials.Certificate("/home/vishnu-yeruva/Documents/Edu/CMPE 295-B/Project/api/fbAdminConfig.json")
+# default_app=firebase_admin.initialize_app(cred)
 CORS(app)
 db = firestore.client()
 todo_ref=db.collection('todos')  #sample collections
-pb = pyrebase.initialize_app(json.load(open('/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbconfig.json')))
+pb = pyrebase.initialize_app(json.load(open('/home/vishnu-yeruva/Documents/Edu/CMPE 295-B/Project/api/fbconfig.json')))
 
-<<<<<<< Updated upstream
-=======
 db_connect = firestore.client()
 todo_ref = db_connect.collection('todos')  #sample collections ##############
 
 firebase = pyrebase.initialize_app(json.load(open('/home/vishnu-yeruva/Documents/Edu/CMPE 295-B/Project/api/fbconfig.json')))
->>>>>>> Stashed changes
 
 @app.route("/")  #basic api
 def home():
@@ -99,8 +92,6 @@ def signin():
             return jsonify({'message':'please verify your account with your mailId'}),401
     except:
         return jsonify({'message':'invalid crendentails or user does not exist'}),403
-<<<<<<< Updated upstream
-=======
 
 '''
 #logout api
@@ -188,48 +179,23 @@ def search_similar_image1():
 
 ###########################################################################
 
-UPLOAD_FOLDER = '/static/uploads/'
+@app.route('/ocr', methods = ['POST'])
+# TODO add @isAuthenticated
+# TODO integrate with react app
+def get_text():
 
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-
-app = Flask(__name__)
-
-def allowed_file(filename):  
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.route('/')
-def home_page():  
-    return render_template('index.html')
-
-@app.route('/upload', methods=['GET', 'POST'])
-def upload_page():  
-    if request.method == 'POST':
-        # check if there is a file in the request
-        if 'file' not in request.files:
-            return render_template('upload.html', msg='No file selected')
-        file = request.files['file']
-        # if no file is selected
-        if file.filename == '':
-            return render_template('upload.html', msg='No file selected')
-
-        if file and allowed_file(file.filename):
-
-            # call the OCR function on it
-            extracted_text = ocr_core(file)
-
-            # extract the text and display it
-            return render_template('upload.html',
-                                   msg='Successfully processed',
-                                   extracted_text=extracted_text,
-                                   img_src=UPLOAD_FOLDER + file.filename)
-    elif request.method == 'GET':
-        return render_template('upload.html')
+    if 'file' not in request.files:
+        return jsonify({'message': 'Please upload file'}), 400
+    img_file = request.files['file']
+    if img_file is None:
+        return jsonify({'message': 'Please upload file'}), 400
+    img_text = ocr_core(filename=img_file)
+    return jsonify({'ocr_text':img_text}), 200
+    
 
 ##########################################################################
 
 
->>>>>>> Stashed changes
 if __name__ == '__main__':
     app.run(debug=True)
 
