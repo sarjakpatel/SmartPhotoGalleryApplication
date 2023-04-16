@@ -14,7 +14,11 @@ from firebase_admin import auth
 from werkzeug.utils import secure_filename
 import os  
 from flask import Flask, render_template, request
+<<<<<<< HEAD
 from ocr_core import ocr_core
+=======
+from data import ocr_core
+>>>>>>> 70eb035 (remodify)
 from flask_cors import CORS
 from functools import wraps
 
@@ -163,6 +167,7 @@ def login():
 
 UPLOAD_FOLDER = '/static/uploads/'
 
+<<<<<<< HEAD
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 
 app = Flask(__name__)
@@ -212,6 +217,15 @@ def ocr_core(filename):
     """
     text = pytesseract.image_to_string(Image.open(filename))  # We'll use Pillow's Image class to open the image and pytesseract to detect the string in the image
     return text
+=======
+    if 'file' not in request.files:
+        return jsonify({'message': 'Please upload file'}), 400
+    img_file = request.files['file']
+    if img_file is None:
+        return jsonify({'message': 'Please upload file'}), 400
+    img_text = ocr_core(filename=img_file)
+    return jsonify({'ocr_text':img_text}), 200
+>>>>>>> 70eb035 (remodify)
 
 ##########################################################################
 
