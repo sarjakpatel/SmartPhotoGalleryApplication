@@ -9,7 +9,7 @@ from werkzeug.utils import secure_filename
 import os  
 import json
 from flask import Flask, render_template, request
-from ocr_core import ocr_core
+# from ocr_core import ocr_core
 from flask_cors import CORS
 from functools import wraps
 
@@ -192,6 +192,20 @@ def get_text():
     img_text = ocr_core(filename=img_file)
     return jsonify({'ocr_text':img_text}), 200
     
+
+
+try:  
+    from PIL import Image
+except ImportError:  
+    import Image
+import pytesseract
+
+def ocr_core(filename):  
+    """
+    This function will handle the core OCR processing of images.
+    """
+    text = pytesseract.image_to_string(Image.open(filename))  # We'll use Pillow's Image class to open the image and pytesseract to detect the string in the image
+    return text
 
 ##########################################################################
 
