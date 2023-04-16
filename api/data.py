@@ -40,8 +40,10 @@ def compute_face_encodings(input):
     else:
 
         #file_name_string = base64.urlsafe_b64encode(url)
-        #img = cv2.imread(file_name_string)
-        img = input
+        #pil_image = PIL.Image.open(input)
+        img = cv2.cvtColor(numpy.array(input), cv2.COLOR_RGB2BGR)
+        #img = cv2.imread(input)
+        # img = input
     
     #img = cv2.imread(opencvImage)
     grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -56,7 +58,7 @@ def compute_face_encodings(input):
     
     print('Number of faces detected:', len(faces))
 
-    if (len(faces) == 1):
+    if len(faces)>0:
         
         
         boxes = [(y, x + w, y + h, x) for (x, y, w, h) in faces]
@@ -69,16 +71,10 @@ def compute_face_encodings(input):
     
     else:
         
-        boxes = [(y, x + w, y + h, x) for (x, y, w, h) in faces]
-
-        encoding = face_recognition.face_encodings(rgb, boxes)
-
-        print('Computed encodings')
-        
-        return encoding #returns ndarray
+        return [] #returns ndarray
 
 
-def store_cropped_image(email, image_url):
+def store_cropped_image(email, image_url, token):
 
     img_format = Image.open(requests.get(image_url, stream=True).raw)
     
@@ -94,7 +90,7 @@ def store_cropped_image(email, image_url):
 
     #print(len(faces))
 
-    if (len(faces) >= 0):
+    if (len(faces) > 0):
         urls = []
         keys = []
         
@@ -139,13 +135,15 @@ def store_cropped_image(email, image_url):
 
             #im = Image.fromarray(face)
 
-            storage.child(file_path).put(file_path)
+            res = storage.child(file_path).put(file_path)
+            # print(res.public_url)
+            # print(type(res))
 
             # Get url of image
-            email1 = "rajvi.shah@sjsu.edu"
-            password = "password"
-            user = firebase.auth().sign_in_with_email_and_password(email1, password)
-            url = storage.child(file_path).get_url(user['idToken'])
+            # email1 = "rajvi.shah@sjsu.edu"
+            # password = "password"
+            # user = firebase.auth().sign_in_with_email_and_password(email1, password)
+            url = storage.child(file_path).get_url(token)
             #print(url)
             urls.append(url)
 
@@ -190,91 +188,104 @@ def store_cropped_image(email, image_url):
 def search_similar_image(email, image_url):
 
     faces = compute_face_encodings(image_url)
-    print('Computed face encodings for a given image url')
-    faces1 = len(faces)
+    flag = 0
+    if len(faces)>0:
+        flag = 1
+        print('Computed face encodings for a given image url')
+        faces1 = len(faces)
 
-    doc_ref = db.collection("userDetails").document(email).collection("data")
-    print('Database connected')
-    encoding_ref = doc_ref.document("face_encodings")
-    stored_encodings = encoding_ref.get().to_dict()
+        doc_ref = db.collection("userDetails").document(email).collection("data")
+        print('Database connected')
+        encoding_ref = doc_ref.document("face_encodings")
+        stored_encodings = encoding_ref.get().to_dict()
 
-    doc_ref = db.collection("userDetails").document(email).collection("data")
-    url_ref = doc_ref.document("image_urls")
-    stored_urls = url_ref.get().to_dict()
+        doc_ref = db.collection("userDetails").document(email).collection("data")
+        url_ref = doc_ref.document("image_urls")
+        stored_urls = url_ref.get().to_dict()
 
-    dict_of_encodings = {}
-    
-   
-    output_urls = []
-
-    if stored_encodings:
-        match1 = False
-
-        for key in stored_encodings.keys():
-            encoding = stored_encodings[key]
-            #stored encoding type coversion
-            encoding = encoding.replace('[', '').replace(']', '').replace('\n', '')
-            new_encoding = list(encoding.split(","))
-            new_encoding1 = [eval(i) for i in new_encoding]
-            dict_of_encodings.update({key : new_encoding1})
-        print('Collected all encodings from the firebase')
-        print(dict_of_encodings)
+        dict_of_encodings = {}
         
-        keys = []
-        for face_encoding1 in faces:
+    
+        output_urls = []
+
+        if stored_encodings:
+            match1 = False
+
+            for key in stored_encodings.keys():
+                encoding = stored_encodings[key]
+                #stored encoding type coversion
+                encoding = encoding.replace('[', '').replace(']', '').replace('\n', '')
+                new_encoding = list(encoding.split(","))
+                new_encoding1 = [eval(i) for i in new_encoding]
+                dict_of_encodings.update({key : new_encoding1})
+            print('Collected all encodings from the firebase')
+            #print(dict_of_encodings)
             
-            for key in dict_of_encodings.keys():
+            keys = []
+            for face_encoding1 in faces:
                 
-                face_encoding2 = dict_of_encodings[key]
-
-
-                face_encoding1 = numpy.array(face_encoding1)
-                face_encoding2 = numpy.array(face_encoding2)
-
-                matches = face_recognition.compare_faces([face_encoding1], face_encoding2, tolerance = 0.5)
-                is_match = any(matches)
-                
-                print('Are faces matching:', is_match)
-
-                if is_match:
-                    current_url = stored_urls[key]
-                    output_urls.append(current_url)
-                    keys.append(key)
-                    match1 = True
+                for key in dict_of_encodings.keys():
                     
-                
-                
-        return output_urls, keys, match1
+                    face_encoding2 = dict_of_encodings[key]
+
+
+                    face_encoding1 = numpy.array(face_encoding1)
+                    face_encoding2 = numpy.array(face_encoding2)
+
+                    matches = face_recognition.compare_faces([face_encoding1], face_encoding2, tolerance = 0.5)
+                    is_match = any(matches)
+                    
+                    print('Are faces matching:', is_match)
+
+                    if is_match:
+                        current_url = stored_urls[key]
+                        output_urls.append(current_url)
+                        keys.append(key)
+                        match1 = True
+                        
+                    
+                    
+            return output_urls, keys, match1, flag
+        
+        else:
+            return output_urls, None, False, flag
+    else:
+        #no encodings found
+        return [], [], False, flag
+
+
+
+
+
+def check_encodings(email, image_url, token):
+
+    urls, keys, is_match, flag = search_similar_image(email, image_url)
+    if flag == 0:
+        return False
     
     else:
-        return output_urls, None, False
 
+        print('Face matched?', is_match)
+        
+        doc_ref = db.collection("userDetails").document(email).collection("data")
+        print('Database connected')
 
+        url_ref = doc_ref.document("image_urls")
+        stored_urls = url_ref.get().to_dict()
+        
+        
+        if is_match:
+                
+            for key in keys:
+        
+                url_ref.update({key: firestore.ArrayUnion([image_url])})
+            print("Given image encodings matched with the stored encodings so updated image_urls hashmap")
+            return True
+        
 
+        else:
 
-def check_encodings(email, image_url):
+            urls, keys = store_cropped_image(email, image_url, token)
 
-    urls, keys, is_match = search_similar_image(email, image_url)
+            return True
 
-    print('Face matched?', is_match)
-    
-    doc_ref = db.collection("userDetails").document(email).collection("data")
-    print('Database connected')
-
-    url_ref = doc_ref.document("image_urls")
-    stored_urls = url_ref.get().to_dict()
-    
-    if is_match:
-            
-        for key in keys:
-    
-            url_ref.update({key: firestore.ArrayUnion([image_url])})
-        print("Given image encodings matched with the stored encodings so updated image_urls hashmap")
-        return 'updated image url'
-    
-
-    else:
-
-        urls, keys = store_cropped_image(email, image_url)
-
-        return 'new faces detected so stored cropped image, face-encodings, and image_url'

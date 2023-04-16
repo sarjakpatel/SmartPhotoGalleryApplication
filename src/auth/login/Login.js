@@ -45,6 +45,7 @@ const Login = () => {
                 }
                 localStorage.clear();
                 localStorage.setItem('user-token', token);
+                localStorage.setItem('email', formDataJSON.email);
                 setTimeout(() => {
     
                     toast.success('Login Successfully!!', {
@@ -57,9 +58,8 @@ const Login = () => {
                         progress: undefined,
                         theme: "colored",
                         });
-                    globalVariable.email = formDataJSON.email;
                     navigate('/');
-                }, 500);
+                }, 200);
             }
         }).catch((error) => {
             

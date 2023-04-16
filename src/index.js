@@ -12,6 +12,10 @@ import SignUp from './auth/login/SignUp';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Home from './comps/Home';
+import SearchImage from './comps/SearchImage';
+import TextExtraction from './comps/TextExtraction';
+import EmotionDetection from './comps/EmotionDetection';
+import Classify from './comps/Classify';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -29,16 +33,27 @@ root.render(
 							<Home />
 						</ProtectedRoute>
 					} />
-					<Route path='home' element={
+					<Route path='classify' element={
 						<ProtectedRoute>
-							<Home />
+							<Classify />
 						</ProtectedRoute>
 					} />
-					<Route path='about' element={
+					<Route path='search' element={
 						<ProtectedRoute>
-							<Home />
+							<SearchImage />
 						</ProtectedRoute>
 					} />
+					<Route path='emotion-detection' element={
+						<ProtectedRoute>
+							<EmotionDetection />
+						</ProtectedRoute>
+					} />
+					<Route path='text-extraction' element={
+						<ProtectedRoute>
+							<TextExtraction />
+						</ProtectedRoute>
+					} />
+	
 				</Route>
 			</Routes>
 			<ToastContainer
