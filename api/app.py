@@ -15,6 +15,8 @@ from werkzeug.utils import secure_filename
 import os  
 from flask import Flask, render_template, request
 from ocr_core import ocr_core
+from flask_cors import CORS
+from functools import wraps
 
 #from face_encodings import search_similar_image, store_encodings, check_face_encodings
 from data import check_encodings, search_similar_image
@@ -196,6 +198,20 @@ def upload_page():
                                    img_src=UPLOAD_FOLDER + file.filename)
     elif request.method == 'GET':
         return render_template('upload.html')
+
+
+try:  
+    from PIL import Image
+except ImportError:  
+    import Image
+import pytesseract
+
+def ocr_core(filename):  
+    """
+    This function will handle the core OCR processing of images.
+    """
+    text = pytesseract.image_to_string(Image.open(filename))  # We'll use Pillow's Image class to open the image and pytesseract to detect the string in the image
+    return text
 
 ##########################################################################
 
