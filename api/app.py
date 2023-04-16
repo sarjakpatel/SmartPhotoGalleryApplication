@@ -17,6 +17,8 @@ from werkzeug.utils import secure_filename
 #from face_encodings import search_similar_image, store_encodings, check_face_encodings
 from data import check_encodings, search_similar_image
 
+from PIL import Image
+
 import cv2
 import numpy
 
@@ -149,6 +151,7 @@ def isAuthenticated(f):
 
 def store_encodings1():
 
+    token = request.json['user-token']
     email = request.json['email'] 
     image_url = request.json['image_url']
 
@@ -164,37 +167,47 @@ def store_encodings1():
     #is_encoding_stored = store_encodings(email, image_url)
 
     elif email and image_url:
-
-        is_encoding_stored = check_encodings(email, image_url)
+        print(email)
+        is_encoding_stored = check_encodings(email, image_url, token)
 
         if is_encoding_stored:
+            print("encoding found")
             return jsonify({'message': 'stored encodings'}), 200
         
         else:
+            print("no encoding found")
             return jsonify({'message': 'no encodings found in the image'}), 204
 
 
 @app.route('/image-search', methods = ['POST'])
-@isAuthenticated
 
 def search_similar_image1():
-
-    email = request.json['email'] 
+    
+    token = request.form.get('user-token')
+    email = request.form.get('email')
     #email = 'rajvi.shah@sjsu.edu'
     #file = request.files['file']
-    img_matrix = cv2.imdecode(numpy.fromstring(request.files['file'].read(), numpy.uint8), cv2.IMREAD_UNCHANGED)
+    # print(request)
+    print(email)
+    # print(type(request.files['file']))
+    image = Image.open(request.files['file'])
+    # print(type(image))
+    # print(image)
+    
+    # img_matrix = cv2.imdecode(numpy.fromstring(request.files['file'].read(), numpy.uint8), cv2.IMREAD_UNCHANGED)
 
-    if email is None and img_matrix is None:
+    if email is None and image is None:
         return jsonify({'message': 'email must not to be empty and upload file'}), 400
     
     elif email is None:
         return jsonify({'message': 'email must not to be empty'}), 400
     
-    elif img_matrix is None:
+    elif image is None:
         return jsonify({'message': 'upload file'}), 400
 
-    elif email and img_matrix:
-        output_urls, keys, match1 = search_similar_image(email, img_matrix)
+    elif email and image:
+        print(email)
+        output_urls, keys, match1, flag = search_similar_image(email, image)
         
 
         return jsonify({'list of similar images': output_urls}), 200

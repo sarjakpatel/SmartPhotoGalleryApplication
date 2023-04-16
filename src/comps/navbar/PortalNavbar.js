@@ -19,9 +19,11 @@ const PortalNavbar = () => {
                 <Container>
                     <Nav className="me-auto">
                     <Link to="/" className="me-3 abc">Smart Photo Gallery Application</Link>
-                    <Link to="/home" className="me-3 abc">Home</Link>
-                    <Link to="/about" className="me-3 abc">About</Link>
-                    <Link to="/pricing" className="me-3 abc">Price</Link>
+                    <Link to="/classify" className="me-3 abc">Classify</Link>
+                    <Link to="/search" className="me-3 abc">Search</Link>
+                    <Link to="/emotion-detection" className="me-3 abc">Detect Emotion</Link>
+                    <Link to="/text-extraction" className="me-3 abc">Extract Text</Link>
+                    
                     </Nav>
                     
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
