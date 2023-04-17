@@ -6,7 +6,7 @@ import os
 import io
 import json
 from functools import wraps
-from tkinter import Image
+from PIL import Image
 from emotionDetection import compute_emotion
 from faceAnalysis import analyze_face
 
@@ -217,12 +217,12 @@ def search_similar_image1():
 
 
 @app.route('/face-analysis', methods = ['POST'])
-@isAuthenticated
+#@isAuthenticated
 def face_analysis():
     image = Image.open(request.files['file'])
     if image is None:
         return jsonify({'message': 'upload file'}), 400
-    return analyze_face(image)
+    return jsonify({'Face Analysis' : analyze_face(image)}), 200
     
 @app.route('/detect-emotion', methods = ['POST'])
 @isAuthenticated
@@ -230,7 +230,8 @@ def detect_emotion():
     image = Image.open(request.files['file'])
     if image is None:
         return jsonify({'message': 'upload file'}), 400
-    return compute_emotion(image)
+    return jsonify({'emotion detected' : compute_emotion(image)}), 200
+    
         
 if __name__ == '__main__':
 
