@@ -27,7 +27,7 @@ const TextExtraction = () => {
             axios.post(textExtractionAPI, d)
             .then((response) => {
 
-                if(response.status == 200){
+                if(response.status === 200){
                     const data = response.data;
                     console.log(data);
 

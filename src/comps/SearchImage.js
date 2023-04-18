@@ -32,7 +32,7 @@ const SearchImage = () => {
             axios.post(searchAPI, d)
             .then((response) => {
 
-                if(response.status == 200){
+                if(response.status === 200){
                     const data = response.data;
 
                     // console.log(data['list of similar images']);

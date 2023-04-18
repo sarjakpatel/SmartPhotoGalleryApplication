@@ -36,7 +36,7 @@ const Classify = () => {
       
     useEffect(() => {
         
-        if(selectedFaceIndex != undefined){
+        if(selectedFaceIndex !== undefined){
             console.log("Getting cropped picures from firebase");
 
             projectFirestore.collection('userDetails/'+localStorage.getItem('email') + '/data').doc('image_urls').get()
