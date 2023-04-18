@@ -5,7 +5,7 @@ import face_recognition
 from PIL import Image
 import requests
 import numpy
-
+import PIL
 #to store encodings
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -14,6 +14,8 @@ import json
 import pyrebase
 import base64
 import os
+
+import io
 
 cred_file_path = "fbAdminConfig.json"
 cred = credentials.Certificate(cred_file_path)
@@ -52,7 +54,7 @@ def compute_face_encodings(input):
     faces = face_cascade.detectMultiScale(grey, scaleFactor=1.3, minNeighbors=8)
     
     for x, y, w, h in faces:
-        cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 5)
+        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 0), 0)
 
     #print(len(faces))
     
@@ -71,7 +73,7 @@ def compute_face_encodings(input):
     
     else:
         
-        return [] #returns ndarray
+        return []#returns ndarray
 
 
 def store_cropped_image(email, image_url, token):
@@ -93,18 +95,19 @@ def store_cropped_image(email, image_url, token):
     if (len(faces) > 0):
         urls = []
         keys = []
-        
+        #print(i_val)
         for i in range(len(faces)):
+            
             (x, y, w, h) = faces[i]
-            print(i)
+            
 
-            cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 5)
+            cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 0), 0)
         
 
             #boxes = [(y, x + w, y + h, x) for (x, y, w, h) in faces]
             boxes = [(y, x + w, y + h, x)]
             face_encoding = face_recognition.face_encodings(rgb, boxes)
-
+            
             face = img[y:y + h, x:x + w]
 
             url_ref = db.collection("userDetails").document(email).collection("data")
@@ -128,23 +131,13 @@ def store_cropped_image(email, image_url, token):
                 length = 0
             
             file_path = email + "_face_" + str(length) + ".jpg"
-        
+            ####################
             cv2.imwrite(file_path, face)
-            
-            #os.rename(face, file_path)
-
-            #im = Image.fromarray(face)
 
             res = storage.child(file_path).put(file_path)
-            # print(res.public_url)
-            # print(type(res))
 
             # Get url of image
-            # email1 = "rajvi.shah@sjsu.edu"
-            # password = "password"
-            # user = firebase.auth().sign_in_with_email_and_password(email1, password)
             url = storage.child(file_path).get_url(token)
-            #print(url)
             urls.append(url)
 
             #store face url to firebase db
@@ -157,7 +150,7 @@ def store_cropped_image(email, image_url, token):
                 face_encoding = numpy.array2string(face_encoding, separator=',', suppress_small = True)
                 encodings_ref.update({key: face_encoding})
 
-                image_urls_ref.update({key: image_url})
+                image_urls_ref.update({key: [image_url]})
             
                 print('Added face url to the firebase db')
                 #return 'done'
@@ -173,7 +166,7 @@ def store_cropped_image(email, image_url, token):
                 face_encoding = numpy.array2string(face_encoding, separator=',', suppress_small = True)
                 encodings_ref.set({key: face_encoding})
 
-                image_urls_ref.set({key: image_url})
+                image_urls_ref.set({key: [image_url]})
                 print('Added first face url to the firebase db')
                 #return 'done'
                         
@@ -190,6 +183,7 @@ def search_similar_image(email, image_url):
     faces = compute_face_encodings(image_url)
     flag = 0
     if len(faces)>0:
+        
         flag = 1
         print('Computed face encodings for a given image url')
         faces1 = len(faces)
@@ -209,7 +203,7 @@ def search_similar_image(email, image_url):
         output_urls = []
 
         if stored_encodings:
-            match1 = False
+            match1 = []
 
             for key in stored_encodings.keys():
                 encoding = stored_encodings[key]
@@ -222,8 +216,9 @@ def search_similar_image(email, image_url):
             #print(dict_of_encodings)
             
             keys = []
+        
             for face_encoding1 in faces:
-                
+                i = 0
                 for key in dict_of_encodings.keys():
                     
                     face_encoding2 = dict_of_encodings[key]
@@ -242,8 +237,6 @@ def search_similar_image(email, image_url):
                         output_urls.append(current_url)
                         keys.append(key)
                         match1 = True
-                        
-                    
                     
             return output_urls, keys, match1, flag
         
@@ -252,8 +245,6 @@ def search_similar_image(email, image_url):
     else:
         #no encodings found
         return [], [], False, flag
-
-
 
 
 
@@ -280,12 +271,31 @@ def check_encodings(email, image_url, token):
         
                 url_ref.update({key: firestore.ArrayUnion([image_url])})
             print("Given image encodings matched with the stored encodings so updated image_urls hashmap")
+            
             return True
-        
 
         else:
 
-            urls, keys = store_cropped_image(email, image_url, token)
+            store_cropped_image(email, image_url, token)
 
             return True
+
+def deblur_image1(input_image):
+
+    image = cv2.cvtColor(numpy.array(input_image), cv2.COLOR_RGB2BGR)
+    #image = cv2.imread('input.jpg')
+
+    kernel = numpy.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
+
+    sharpened = cv2.filter2D(image, -1, kernel)
+    print(type(sharpened))
+    img = PIL.Image.fromarray(sharpened)
+
+    data = io.BytesIO()
+    img.save(data, "JPEG")
+    encoded_img_data = base64.b64encode(data.getvalue())
+    cv2.imwrite('sharpened.jpg', sharpened)
+    my_str = encoded_img_data.decode('utf-8')
+    return my_str
+    #return 'sharpened.jpg'
 

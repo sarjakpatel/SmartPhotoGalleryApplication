@@ -7,7 +7,7 @@ import io
 import json
 from functools import wraps
 
-from flask import Flask, request, jsonify, redirect, session
+from flask import Flask, request, jsonify, redirect, session, send_file
 from firebase_admin import credentials, firestore, initialize_app, auth
 import firebase_admin
 from flask_cors import CORS
@@ -15,7 +15,7 @@ import pyrebase
 from werkzeug.utils import secure_filename
 
 #from face_encodings import search_similar_image, store_encodings, check_face_encodings
-from data import check_encodings, search_similar_image
+from data import check_encodings, search_similar_image, deblur_image1
 
 from PIL import Image
 
@@ -212,8 +212,22 @@ def search_similar_image1():
 
         return jsonify({'list of similar images': output_urls}), 200
 
+@app.route('/deblur-image', methods = ['POST'])
 
+def deblur_image():
+    image = Image.open(request.files['file'])
+    if image is None:
+        return jsonify({'message': 'upload file'}), 400
+    else:
+        img = deblur_image1(image)
+
+        return jsonify({'Output': img}), 200
+        #return send_file(img)
+    
+    
 if __name__ == '__main__':
 
     app.run(debug = True)
+
+
 
