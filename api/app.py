@@ -224,7 +224,9 @@ def face_analysis():
 
         return jsonify({'Output': img}), 200
         
-@app.route('/detect-emotion', methods = ['POST'])
+
+    
+@app.route('/emotion-detection', methods = ['POST'])
 @isAuthenticated
 def detect_emotion():
     image = Image.open(request.files['file'])
