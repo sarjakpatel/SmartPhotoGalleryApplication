@@ -25,7 +25,7 @@ const Login = () => {
             btnPointer.innerHTML = 'Login';
             btnPointer.removeAttribute('disabled');
             
-            if(response.status == 200){
+            if(response.status === 200){
                 const data = response.data;
                 const token = data.idToken;
                 if (!token) {
@@ -67,7 +67,7 @@ const Login = () => {
             btnPointer.removeAttribute('disabled');
             console.log(error.response.status);
 
-            if(error.response.status == 401){
+            if(error.response.status === 401){
 
                 toast.info('Please verify your email address before login!', {
                     position: "top-center",
