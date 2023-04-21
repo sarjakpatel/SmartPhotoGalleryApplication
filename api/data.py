@@ -3,6 +3,8 @@
 import cv2
 import face_recognition
 from PIL import Image
+from fer import FER
+from deepface import DeepFace
 import requests
 import numpy
 import PIL
@@ -14,7 +16,6 @@ import json
 import pyrebase
 import base64
 import os
-
 import io
 
 cred_file_path = "/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbAdminConfig.json"
@@ -311,3 +312,22 @@ def ocr_core(filename):
     """
     text = pytesseract.image_to_string(Image.open(filename))  # We'll use Pillow's Image class to open the image and pytesseract to detect the string in the image
     return text
+
+def compute_emotion(input):
+    detector = FER(mtcnn=True)
+    img = cv2.cvtColor(numpy.array(input), cv2.COLOR_RGB2BGR)
+    emotion = detector.detect_emotions(img)
+    print(emotion)
+    dominant_emotion = detector.top_emotion(img)
+    return dominant_emotion
+
+def analyze_face(input):
+    img = cv2.cvtColor(numpy.array(input), cv2.COLOR_RGB2BGR)
+    face_analysis = DeepFace.analyze(img_path = img, enforce_detection=False)
+    #list = [face_analysis['dominant_emotion'], face_analysis['age'], face_analysis['dominant_race']]
+    return Convert(face_analysis)
+
+def Convert(list):
+    list = iter(list)
+    res_dct = dict(zip(list, list))
+    return res_dct

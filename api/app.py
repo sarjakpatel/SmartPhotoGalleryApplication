@@ -6,9 +6,7 @@ import os
 import io
 import json
 from functools import wraps
-from tkinter import Image
-from emotionDetection import compute_emotion
-from faceAnalysis import analyze_face
+from PIL import Image
 
 from flask import Flask, request, jsonify, redirect, session
 from firebase_admin import credentials, firestore, initialize_app, auth
@@ -18,7 +16,7 @@ import pyrebase
 from werkzeug.utils import secure_filename
 
 #from face_encodings import search_similar_image, store_encodings, check_face_encodings
-from data import check_encodings, search_similar_image, deblur_image1, ocr_core
+from data import check_encodings, search_similar_image, deblur_image1, ocr_core, compute_emotion
 
 from PIL import Image
 
