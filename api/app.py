@@ -217,7 +217,7 @@ def search_similar_image1():
 
 
 @app.route('/face-analysis', methods = ['POST'])
-#@isAuthenticated
+@isAuthenticated
 def face_analysis():
     image = Image.open(request.files['file'])
     if image is None:
