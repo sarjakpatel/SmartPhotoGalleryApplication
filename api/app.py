@@ -19,7 +19,6 @@ from werkzeug.utils import secure_filename
 
 #from face_encodings import search_similar_image, store_encodings, check_face_encodings
 from data import check_encodings, search_similar_image, deblur_image1, ocr_core
-from data import check_encodings, search_similar_image
 
 from PIL import Image
 
@@ -214,16 +213,16 @@ def search_similar_image1():
         return jsonify({'list of similar images': output_urls}), 200
 
 
+@app.route('/face-analysis', methods = ['POST'])
+@isAuthenticated
+def face_analysis():
+    image = Image.open(request.files['file'])
+    if image is None:
+        return jsonify({'message': 'upload file'}), 400
+    else:
+        img = deblur_image1(image)
 
-
-
-
-
-
-
-
-
-
+        return jsonify({'Output': img}), 200
         
 @app.route('/detect-emotion', methods = ['POST'])
 @isAuthenticated
