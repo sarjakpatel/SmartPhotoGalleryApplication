@@ -17,14 +17,14 @@ import os
 
 import io
 
-cred_file_path = "fbAdminConfig.json"
+cred_file_path = "/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbAdminConfig.json"
 cred = credentials.Certificate(cred_file_path)
 firebase_admin.initialize_app(cred)
 
 # this connects to our Firestore database
 db = firestore.client() 
 
-firebase = pyrebase.initialize_app(json.load(open('fbconfig.json')))
+firebase = pyrebase.initialize_app(json.load(open('/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbconfig.json')))
 storage = firebase.storage()
 
 #cascade_file_path = "C:/Users/HP/Downloads/data/haarcascades/haarcascade_frontalface_alt2.xml"
@@ -298,4 +298,16 @@ def deblur_image1(input_image):
     my_str = encoded_img_data.decode('utf-8')
     return my_str
     #return 'sharpened.jpg'
+    
+try:  
+    from PIL import Image
+except ImportError:  
+    import Image
+import pytesseract
 
+def ocr_core(filename):  
+    """
+    This function will handle the core OCR processing of images.
+    """
+    text = pytesseract.image_to_string(Image.open(filename))  # We'll use Pillow's Image class to open the image and pytesseract to detect the string in the image
+    return text

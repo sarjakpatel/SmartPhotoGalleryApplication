@@ -15,7 +15,7 @@ import pyrebase
 from werkzeug.utils import secure_filename
 
 #from face_encodings import search_similar_image, store_encodings, check_face_encodings
-from data import check_encodings, search_similar_image, deblur_image1
+from data import check_encodings, search_similar_image, deblur_image1, ocr_core
 
 from PIL import Image
 
@@ -36,7 +36,7 @@ CORS(app)
 db_connect = firestore.client()
 todo_ref = db_connect.collection('todos')  #sample collections ##############
 
-firebase = pyrebase.initialize_app(json.load(open('fbconfig.json')))
+firebase = pyrebase.initialize_app(json.load(open('/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbconfig.json')))
 
 
 #signup api
@@ -120,14 +120,11 @@ def login():
 
 '''
 #logout api
-
 @app.route("/logout")
-
 def logout():
     #remove the token setting the user to None
     session.pop('username')
     return redirect("/login")
-
 '''
 
 
@@ -224,10 +221,25 @@ def deblur_image():
         return jsonify({'Output': img}), 200
         #return send_file(img)
     
-    
+
+###########################################################################
+
+@app.route('/text-extraction', methods = ['POST'])
+# TODO add @isAuthenticated
+# TODO integrate with react app
+def get_text():
+
+    if 'file' not in request.files:
+        return jsonify({'message': 'Please upload file'}), 400
+    img_file = request.files['file']
+    if img_file is None:
+        return jsonify({'message': 'Please upload file'}), 400
+    img_text = ocr_core(filename=img_file)
+    return jsonify({'ocr_text':img_text}), 200
+
+##########################################################################
+
+
 if __name__ == '__main__':
-
-    app.run(debug = True)
-
-
+    app.run(debug=True)
 

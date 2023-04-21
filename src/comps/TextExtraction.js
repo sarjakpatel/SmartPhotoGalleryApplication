@@ -9,7 +9,7 @@ const TextExtraction = () => {
 
     const types = ['image/png', 'image/jpeg'];
     
-    const textExtractionAPI = "/ocr";
+    const textExtractionAPI = "/text-extraction";
 
     const handleChange = (e) => {
 
