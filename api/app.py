@@ -16,7 +16,7 @@ import pyrebase
 from werkzeug.utils import secure_filename
 
 #from face_encodings import search_similar_image, store_encodings, check_face_encodings
-from data import check_encodings, search_similar_image, deblur_image1, ocr_core, compute_emotion
+from data import check_encodings, search_similar_image, deblur_image1, ocr_core, compute_emotion, analyze_face
 
 from PIL import Image
 
@@ -217,7 +217,7 @@ def face_analysis():
     image = Image.open(request.files['file'])
     if image is None:
         return jsonify({'message': 'upload file'}), 400
-    return jsonify({'Face Analysis': face_analysis(image)}), 200
+    return jsonify({'Face Analysis': analyze_face(image)}), 200
         
 
     
