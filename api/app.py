@@ -1,32 +1,45 @@
 #reference: https://medium.com/makedeveasy/authenitcation-using-python-flask-and-firestore-1958d29e2240
 
-# import os
-from flask import Flask, request, jsonify
-from firebase_admin import credentials, firestore, initialize_app
-import firebase_admin
-import pyrebase
-from flask_cors import CORS
+
+#import libraries
+import os
 import io
 import json
-from firebase_admin import auth
+from functools import wraps
 
+from flask import Flask, request, jsonify, redirect, session, send_file
+from firebase_admin import credentials, firestore, initialize_app, auth
+import firebase_admin
+from flask_cors import CORS
+import pyrebase
+from werkzeug.utils import secure_filename
 
-app=Flask(__name__)
-cred = credentials.Certificate("/home/vishnu-yeruva/Documents/Edu/CMPE 295-B/Project/api/fbAdminConfig.json")
-# default_app=firebase_admin.initialize_app(cred)
+#from face_encodings import search_similar_image, store_encodings, check_face_encodings
+from data import check_encodings, search_similar_image, deblur_image1, ocr_core
+
+from PIL import Image
+
+import cv2
+import numpy
+
+app = Flask(__name__)
+
+firebase_admin.delete_app(firebase_admin.get_app())
+
+cred = credentials.Certificate('/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbAdminConfig.json')
+default_app = firebase_admin.initialize_app(cred)
+
+#auth = auth()
+
 CORS(app)
-db = firestore.client()
-todo_ref=db.collection('todos')  #sample collections
-pb = pyrebase.initialize_app(json.load(open('/home/vishnu-yeruva/Documents/Edu/CMPE 295-B/Project/api/fbconfig.json')))
 
 db_connect = firestore.client()
 todo_ref = db_connect.collection('todos')  #sample collections ##############
 
-<<<<<<< Updated upstream
-firebase = pyrebase.initialize_app(json.load(open('/home/vishnu-yeruva/Documents/Edu/CMPE 295-B/Project/api/fbconfig.json')))
-=======
 firebase = pyrebase.initialize_app(json.load(open('/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbconfig.json')))
 
+
+#signup api
 
 @app.route('/signup',methods = ['POST'])
 
@@ -61,12 +74,172 @@ def signup():
                 return jsonify({'message': 'user already exists '}), 400
     
         else:
-            return jsonify({'message':'please verify your account with your mailId'}),401
+            return jsonify({'message': 'error creating in user'}), 401
+
+
+
+
+#login api
+
+@app.route('/login', methods = ['POST'])
+
+def login():
+    
+    email = request.json['email'] 
+    password = request.json['password']
+    
+    #check if email and password are entered
+    if email is None or password is None:
+        return jsonify({'message': 'username and password must not to be empty'}), 400
+    
+    
+    try:
+
+        #fetching user details from firebase
+        user = firebase.auth().sign_in_with_email_and_password(email, password)
+        
+
+        #fetch localId of the user to check whether the email id is verified or not
+        check_user_local_id = user['localId']
+        
+        authorized_user = auth.get_user(check_user_local_id)
+        
+        #check if the user verified email or not      
+        is_email_verified = authorized_user.email_verified
+
+        if is_email_verified:
+            return user
+        
+        else:
+            return jsonify({'message': 'please verify your account with your mailId'}), 401
+    
+    
+    #invalid credentials
     except:
         return jsonify({'message':'invalid crendentails or user does not exist'}),403
+
+'''
+#logout api
+@app.route("/logout")
+def logout():
+    #remove the token setting the user to None
+    session.pop('username')
+    return redirect("/login")
+'''
+
+
+#to protect routes
+
+def isAuthenticated(f):
+  @wraps(f)
+  def decorated_function(*args, **kwargs):
+      #check for the variable that pyrebase creates
+      if not firebase.auth() != None:
+          return redirect('/login')
+      return f(*args, **kwargs)
+  return decorated_function
+    
+  
+
+#compute and store encodings to firebase
+
+@app.route('/store-encodings', methods = ['POST'])
+@isAuthenticated
+
+def store_encodings1():
+
+    token = request.json['user-token']
+    email = request.json['email'] 
+    image_url = request.json['image_url']
+
+    if email is None and image_url is None:
+        return jsonify({'message': 'email and image_url must not to be empty'}), 400
+    
+    elif email is None:
+        return jsonify({'message': 'email must not to be empty'}), 400
+    
+    elif image_url is None:
+        return jsonify({'message': 'enter image_url'}), 400
+    
+    #is_encoding_stored = store_encodings(email, image_url)
+
+    elif email and image_url:
+        print(email)
+        is_encoding_stored = check_encodings(email, image_url, token)
+
+        if is_encoding_stored:
+            print("encoding found")
+            return jsonify({'message': 'stored encodings'}), 200
+        
+        else:
+            print("no encoding found")
+            return jsonify({'message': 'no encodings found in the image'}), 204
+
+
+@app.route('/image-search', methods = ['POST'])
+
+def search_similar_image1():
+    
+    token = request.form.get('user-token')
+    email = request.form.get('email')
+    #email = 'rajvi.shah@sjsu.edu'
+    #file = request.files['file']
+    # print(request)
+    print(email)
+    # print(type(request.files['file']))
+    image = Image.open(request.files['file'])
+    # print(type(image))
+    # print(image)
+    
+    # img_matrix = cv2.imdecode(numpy.fromstring(request.files['file'].read(), numpy.uint8), cv2.IMREAD_UNCHANGED)
+
+    if email is None and image is None:
+        return jsonify({'message': 'email must not to be empty and upload file'}), 400
+    
+    elif email is None:
+        return jsonify({'message': 'email must not to be empty'}), 400
+    
+    elif image is None:
+        return jsonify({'message': 'upload file'}), 400
+
+    elif email and image:
+        print(email)
+        output_urls, keys, match1, flag = search_similar_image(email, image)
+        
+
+        return jsonify({'list of similar images': output_urls}), 200
+
+@app.route('/deblur-image', methods = ['POST'])
+
+def deblur_image():
+    image = Image.open(request.files['file'])
+    if image is None:
+        return jsonify({'message': 'upload file'}), 400
+    else:
+        img = deblur_image1(image)
+
+        return jsonify({'Output': img}), 200
+        #return send_file(img)
+    
+
+###########################################################################
+
+@app.route('/text-extraction', methods = ['POST'])
+# TODO add @isAuthenticated
+# TODO integrate with react app
+def get_text():
+
+    if 'file' not in request.files:
+        return jsonify({'message': 'Please upload file'}), 400
+    img_file = request.files['file']
+    if img_file is None:
+        return jsonify({'message': 'Please upload file'}), 400
+    img_text = ocr_core(filename=img_file)
+    return jsonify({'ocr_text':img_text}), 200
+
+##########################################################################
+
+
 if __name__ == '__main__':
-
-    app.run(debug = True)
-
-
+    app.run(debug=True)
 
