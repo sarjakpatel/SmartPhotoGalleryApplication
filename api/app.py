@@ -217,10 +217,7 @@ def face_analysis():
     image = Image.open(request.files['file'])
     if image is None:
         return jsonify({'message': 'upload file'}), 400
-    else:
-        img = deblur_image1(image)
-
-        return jsonify({'Output': img}), 200
+    return jsonify({'Face Analysis': face_analysis(image)}), 200
         
 
     
@@ -230,7 +227,7 @@ def detect_emotion():
     image = Image.open(request.files['file'])
     if image is None:
         return jsonify({'message': 'upload file'}), 400
-    return compute_emotion(image)
+    return jsonify({'emotion detected' : compute_emotion(image)}), 200
         
 
 ###########################################################################
@@ -250,6 +247,17 @@ def get_text():
 
 ##########################################################################
 
+@app.route('/deblur-image', methods = ['POST'])
+
+def deblur_image():
+    image = Image.open(request.files['file'])
+    if image is None:
+        return jsonify({'message': 'upload file'}), 400
+    else:
+        img = deblur_image1(image)
+
+        return jsonify({'Output': img}), 200
+        #return send_file(img)
 
 if __name__ == '__main__':
     app.run(debug=True)
