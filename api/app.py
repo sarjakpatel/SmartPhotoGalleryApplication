@@ -12,6 +12,7 @@ import json
 from firebase_admin import auth
 =======
 from werkzeug.utils import secure_filename
+<<<<<<< Updated upstream
 import os  
 from flask import Flask, render_template, request
 <<<<<<< HEAD
@@ -21,6 +22,9 @@ from data import ocr_core
 >>>>>>> 70eb035 (remodify)
 from flask_cors import CORS
 from functools import wraps
+=======
+from data import ocr_core
+>>>>>>> Stashed changes
 
 #from face_encodings import search_similar_image, store_encodings, check_face_encodings
 from data import check_encodings, search_similar_image
@@ -32,7 +36,11 @@ app = Flask(__name__)
 
 firebase_admin.delete_app(firebase_admin.get_app())
 
+<<<<<<< Updated upstream
 cred = credentials.Certificate('/home/vishnu-yeruva/Documents/Edu/CMPE 295-B/Project/api/fbAdminConfig.json')
+=======
+cred = credentials.Certificate('/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbAdminConfig.json')
+>>>>>>> Stashed changes
 default_app = firebase_admin.initialize_app(cred)
 >>>>>>> Stashed changes
 
@@ -48,7 +56,14 @@ pb = pyrebase.initialize_app(json.load(open('/home/vishnu-yeruva/Documents/Edu/C
 db_connect = firestore.client()
 todo_ref = db_connect.collection('todos')  #sample collections ##############
 
+<<<<<<< Updated upstream
 firebase = pyrebase.initialize_app(json.load(open('/home/vishnu-yeruva/Documents/Edu/CMPE 295-B/Project/api/fbconfig.json')))
+=======
+firebase = pyrebase.initialize_app(json.load(open('/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbconfig.json')))
+
+
+#signup api
+>>>>>>> Stashed changes
 
 #signup api
 
@@ -162,6 +177,26 @@ def login():
 
         return jsonify({'list of similar images': output_urls}), 200
     
+<<<<<<< Updated upstream
+=======
+
+###########################################################################
+
+@app.route('/text-extraction', methods = ['POST'])
+# TODO add @isAuthenticated
+# TODO integrate with react app
+def get_text():
+
+    if 'file' not in request.files:
+        return jsonify({'message': 'Please upload file'}), 400
+    img_file = request.files['file']
+    if img_file is None:
+        return jsonify({'message': 'Please upload file'}), 400
+    img_text = ocr_core(filename=img_file)
+    return jsonify({'ocr_text':img_text}), 200
+
+##########################################################################
+>>>>>>> Stashed changes
 
 ###########################################################################
 
