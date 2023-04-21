@@ -321,6 +321,25 @@ def compute_emotion(input):
     dominant_emotion = detector.top_emotion(img)
     return dominant_emotion
 
+def deblur_image1(input_image):
+
+    image = cv2.cvtColor(numpy.array(input_image), cv2.COLOR_RGB2BGR)
+    #image = cv2.imread('input.jpg')
+
+    kernel = numpy.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
+
+    sharpened = cv2.filter2D(image, -1, kernel)
+    print(type(sharpened))
+    img = PIL.Image.fromarray(sharpened)
+
+    data = io.BytesIO()
+    img.save(data, "JPEG")
+    encoded_img_data = base64.b64encode(data.getvalue())
+    cv2.imwrite('sharpened.jpg', sharpened)
+    my_str = encoded_img_data.decode('utf-8')
+    return my_str
+    #return 'sharpened.jpg'
+
 def analyze_face(input):
     img = cv2.cvtColor(numpy.array(input), cv2.COLOR_RGB2BGR)
     face_analysis = DeepFace.analyze(img_path = img, enforce_detection=False)
