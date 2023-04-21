@@ -26,7 +26,7 @@ app = Flask(__name__)
 
 firebase_admin.delete_app(firebase_admin.get_app())
 
-cred = credentials.Certificate('/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbAdminConfig.json')
+cred = credentials.Certificate('fbAdminConfig.json')
 default_app = firebase_admin.initialize_app(cred)
 
 #auth = auth()
