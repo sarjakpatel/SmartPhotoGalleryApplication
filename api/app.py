@@ -8,7 +8,7 @@ import json
 from functools import wraps
 from PIL import Image
 
-from flask import Flask, request, jsonify, redirect, session
+from flask import Flask, request, jsonify, redirect, session, send_file
 from firebase_admin import credentials, firestore, initialize_app, auth
 import firebase_admin
 from flask_cors import CORS

@@ -4,7 +4,7 @@ import { Button, Col, Container, Form, FormGroup, FormLabel, Row } from "react-b
 import { Link, useNavigate } from "react-router-dom";
 import {toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-//import globalVariable from "../../globalVariable";
+import globalVariable from "../../globalVariable";
 
 const Login = () => {
 
