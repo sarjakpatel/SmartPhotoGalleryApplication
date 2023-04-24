@@ -18,14 +18,14 @@ import base64
 import os
 import io
 
-cred_file_path = "/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbAdminConfig.json"
+cred_file_path = "fbAdminConfig.json"
 cred = credentials.Certificate(cred_file_path)
 firebase_admin.initialize_app(cred)
 
 # this connects to our Firestore database
 db = firestore.client() 
 
-firebase = pyrebase.initialize_app(json.load(open('/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbconfig.json')))
+firebase = pyrebase.initialize_app(json.load(open('fbconfig.json')))
 storage = firebase.storage()
 
 #cascade_file_path = "C:/Users/HP/Downloads/data/haarcascades/haarcascade_frontalface_alt2.xml"
@@ -343,10 +343,9 @@ def deblur_image1(input_image):
 def analyze_face(input):
     img = cv2.cvtColor(numpy.array(input), cv2.COLOR_RGB2BGR)
     face_analysis = DeepFace.analyze(img_path = img, enforce_detection=False)
-    #list = [face_analysis['dominant_emotion'], face_analysis['age'], face_analysis['dominant_race']]
-    return Convert(face_analysis)
-
-def Convert(list):
-    list = iter(list)
-    res_dct = dict(zip(list, list))
-    return res_dct
+    return [
+        "Age : " + str(face_analysis[0]['age']),
+        "Race : " + str.capitalize(face_analysis[0]['dominant_race']),
+        "Emotion : " + str.capitalize(face_analysis[0]['dominant_emotion']),
+        "Gender : " + face_analysis[0]['dominant_gender']
+    ]

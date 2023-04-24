@@ -37,7 +37,7 @@ CORS(app)
 db_connect = firestore.client()
 todo_ref = db_connect.collection('todos')  #sample collections ##############
 
-firebase = pyrebase.initialize_app(json.load(open('/home/vishnu-yeruva/Documents/Edu/CMPE295B/Project/SmartPhotoGalleryApplication/api/fbconfig.json')))
+firebase = pyrebase.initialize_app(json.load(open('fbconfig.json')))
 
 
 #signup api
