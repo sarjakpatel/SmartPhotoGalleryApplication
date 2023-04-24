@@ -18,6 +18,14 @@ import base64
 import os
 import io
 
+try:  
+    from PIL import Image
+except ImportError:  
+    import Image
+    
+import pytesseract
+pytesseract.pytesseract.tesseract_cmd = r'Tesseract-OCR\tesseract.exe'
+
 cred_file_path = "fbAdminConfig.json"
 cred = credentials.Certificate(cred_file_path)
 firebase_admin.initialize_app(cred)
@@ -300,11 +308,6 @@ def deblur_image1(input_image):
     return my_str
     #return 'sharpened.jpg'
     
-try:  
-    from PIL import Image
-except ImportError:  
-    import Image
-import pytesseract
 
 def ocr_core(filename):  
     """
@@ -320,7 +323,7 @@ def compute_emotion(input):
     print(emotion)
     dominant_emotion = detector.top_emotion(img)
     return dominant_emotion
-
+'''
 def deblur_image1(input_image):
 
     image = cv2.cvtColor(numpy.array(input_image), cv2.COLOR_RGB2BGR)
@@ -339,7 +342,7 @@ def deblur_image1(input_image):
     my_str = encoded_img_data.decode('utf-8')
     return my_str
     #return 'sharpened.jpg'
-
+'''
 def analyze_face(input):
     img = cv2.cvtColor(numpy.array(input), cv2.COLOR_RGB2BGR)
     face_analysis = DeepFace.analyze(img_path = img, enforce_detection=False)
