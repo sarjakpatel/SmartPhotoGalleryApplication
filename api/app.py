@@ -16,8 +16,7 @@ import pyrebase
 from werkzeug.utils import secure_filename
 
 #from face_encodings import search_similar_image, store_encodings, check_face_encodings
-#from data import check_encodings, search_similar_image, deblur_image1, ocr_core, compute_emotion, analyze_face
-from data import *
+from data import check_encodings, search_similar_image, deblur_image1, ocr_core, compute_emotion, analyze_face, photoEditor, restore_image
 
 from PIL import Image
 from io import BytesIO
@@ -373,6 +372,26 @@ def generate_image():
     #return jsonify({'image': output})
 
 
+
+@app.route('/image-filter', methods = ['POST'])
+@isAuthenticated
+def apply_filter():
+    image = Image.open(request.files['file'])
+    if image is None:
+        return jsonify({'message': 'upload file'}), 400
+    else:
+        img = photoEditor(image, 0, 0, 0, 0, 0, 0, '')
+        return jsonify({'Output': img}), 200
+
+@app.route('/image-restoration', methods = ['POST'])
+@isAuthenticated
+def image_restoration():
+    image = Image.open(request.files['file'])
+    if image is None:
+        return jsonify({'message': 'upload file'}), 400
+    else:
+        img = restore_image(image)
+        return jsonify({'Output': img}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

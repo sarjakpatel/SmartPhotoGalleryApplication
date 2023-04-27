@@ -10,9 +10,9 @@ import PIL
 #to store encodings
 import firebase_admin
 from firebase_admin import credentials, firestore
-import numpy
 import json
 import pyrebase
+import replicate
 import base64
 import os
 import io
@@ -536,3 +536,227 @@ def generate_image1(text):
     #img.save('img.jpg')
 
     return img
+#######################################################################################
+#applying filters to the image
+
+#Brightness
+def brightness_control(image_path,brightness):
+  brightness = int(((brightness + 127)*(127 + 127)/(100 + 100)) - 127)
+  image = cv2.cvtColor(numpy.array(image_path), cv2.COLOR_RGB2BGR)
+  if brightness > 0:
+      shadow = brightness
+      highlight = 255
+  else:
+      shadow = 0
+      highlight = 255 + brightness
+  alpha_b = (highlight - shadow)/255
+  gamma_b = shadow
+  
+  image = cv2.addWeighted(image, alpha_b, image, 0, gamma_b)
+  #cv2_imshow(image)
+  cv2.imwrite('temp.jpg',image)
+
+#Contrast
+def contrast_control(image_path, contrast):
+  contrast = int(((contrast + 64)*(64 + 64)/(100 + 100)) - 64)
+  image = cv2.cvtColor(numpy.array(image_path), cv2.COLOR_RGB2BGR)
+  if contrast != 0:
+    f = 131*(contrast + 127)/(127*(131-contrast))
+    alpha_c = f
+    gamma_c = 127*(1-f)
+    
+    image = cv2.addWeighted(image, alpha_c, image, 0, gamma_c)
+  #cv2_imshow(image)
+  cv2.imwrite('temp.jpg',image)
+
+#Saturation
+def saturation_control(image_path,value):
+  value = 1 + (value/100)
+  image = cv2.cvtColor(numpy.array(image_path), cv2.COLOR_RGB2BGR)
+  hsvImg = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
+  hsvImg[...,1] = hsvImg[...,1]*value
+  image=cv2.cvtColor(hsvImg,cv2.COLOR_HSV2BGR)
+  #cv2_imshow(image)
+  cv2.imwrite('temp.jpg',image)
+
+#Sharpness
+def sharpen_control(image_path, amount):
+  amount = int(((amount - 1)*(3 - 1)/(100 - 0)) + 1)
+  image = cv2.cvtColor(numpy.array(image_path), cv2.COLOR_RGB2BGR)
+  kernel_size=(5, 5)
+  sigma=1.0 
+  threshold=0
+  blurred = cv2.GaussianBlur(image, kernel_size, sigma)
+  sharpened = float(amount + 1) * image - float(amount) * blurred
+  sharpened = numpy.maximum(sharpened, numpy.zeros(sharpened.shape))
+  sharpened = numpy.minimum(sharpened, 255 * numpy.ones(sharpened.shape))
+  sharpened = sharpened.round().astype(numpy.uint8)
+  if threshold > 0:
+      low_contrast_mask = numpy.absolute(image - blurred) < threshold
+      numpy.copyto(sharpened, image, where=low_contrast_mask)
+  #cv2_imshow(sharpened)
+  cv2.imwrite('temp.jpg',sharpened)
+
+#Hue
+def hue_control(image_path,value):
+  image = cv2.cvtColor(numpy.array(image_path), cv2.COLOR_RGB2BGR)
+  hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+  h, s, v = cv2.split(hsv)
+  h += value
+  final_hsv = cv2.merge((h, s, v))
+  image = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
+  #cv2_imshow(image)
+  cv2.imwrite('temp.jpg',image)
+
+#Vignette
+def vignette_control(image_path,vignette):
+  vignette = int(175.00/((vignette)/(100.00)))
+  image = cv2.cvtColor(numpy.array(image_path), cv2.COLOR_RGB2BGR)
+  rows,cols = image.shape[:2]
+  zeros = numpy.copy(image)
+  zeros[:,:,:] = 0
+  a = cv2.getGaussianKernel(cols,vignette)
+  b = cv2.getGaussianKernel(rows,vignette)
+  c = b*a.T
+  d = c/c.max()
+  zeros[:,:,0] = image[:,:,0]*d
+  zeros[:,:,1] = image[:,:,1]*d
+  zeros[:,:,2] = image[:,:,2]*d
+  #cv2_imshow(zeros)
+  cv2.imwrite('temp.jpg',zeros)
+
+#Cartoon
+def cartoon_effect(image_path):
+  img_rgb = cv2.cvtColor(numpy.array(image_path), cv2.COLOR_RGB2BGR)
+  num_down = 2
+  num_bilateral = 7
+  img_color = img_rgb
+  for _ in range(num_down):
+    img_color = cv2.pyrDown(img_color)
+  for _ in range(num_bilateral):
+    img_color = cv2.bilateralFilter(img_color, d=9, sigmaColor=9, sigmaSpace=7)
+  for _ in range(num_down):
+    img_color = cv2.pyrUp(img_color)
+  img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
+  img_blur = cv2.medianBlur(img_gray, 7)
+
+  img_edge = cv2.adaptiveThreshold(img_blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,
+                                  blockSize=9, C=2)
+  img_edge = cv2.cvtColor(img_edge, cv2.COLOR_GRAY2RGB)
+  img_cartoon = cv2.bitwise_and(img_color, img_edge)
+  #cv2_imshow(img_cartoon)
+  cv2.imwrite('temp.jpg',img_cartoon)
+
+#Blur
+def blur_filter(image_path):
+  image = cv2.cvtColor(numpy.array(image_path), cv2.COLOR_RGB2BGR)
+  image = cv2.GaussianBlur(image,(5,5),cv2.BORDER_DEFAULT)
+  #cv2_imshow(image)
+  cv2.imwrite('temp.jpg',image)
+
+#Edge
+def edge_filter(image_path):
+  image = cv2.cvtColor(numpy.array(image_path), cv2.COLOR_RGB2BGR)
+  image = cv2.Canny(image,100,300)
+  #cv2_imshow(image)
+  cv2.imwrite('temp.jpg',image)
+
+#Vintage
+def vintage_filter(image_path):
+  image = cv2.cvtColor(numpy.array(image_path), cv2.COLOR_RGB2BGR)
+  rows, cols = image.shape[:2]
+  # Create a Gaussian filter
+  kernel_x = cv2.getGaussianKernel(cols,200)
+  kernel_y = cv2.getGaussianKernel(rows,200)
+  kernel = kernel_y * kernel_x.T
+  filter = 255 * kernel / numpy.linalg.norm(kernel)
+  vintage_im = numpy.copy(image)
+  # for each channel in the input image, we will apply the above filter
+  for i in range(3):
+      vintage_im[:,:,i] = vintage_im[:,:,i] * filter
+  #cv2_imshow(vintage_im)
+  cv2.imwrite('temp.jpg',vintage_im)
+
+#Black and White
+def blackwhite_filter(image_path):
+  image = cv2.cvtColor(numpy.array(image_path), cv2.COLOR_RGB2BGR)
+  #cv2_imshow(image)
+  cv2.imwrite('temp.jpg',image)
+
+#Monochrome
+def monochrome_filter(image_path):
+  image = cv2.cvtColor(numpy.array(image_path), cv2.COLOR_RGB2BGR)
+  (thresh, im_bw) = cv2.threshold(image, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+  #cv2_imshow(im_bw)
+  cv2.imwrite('temp.jpg',im_bw)
+
+#Main Function
+def photoEditor(imageInput, brightnessValue, contrastValue, saturationValue, hueValue, vignetteValue, sharpenValue, effectList):
+  #image_inp = Image.fromarray(imageInput)
+  #image_inp.save("temp.jpg") 
+
+  image = cv2.cvtColor(numpy.array(imageInput), cv2.COLOR_RGB2BGR)
+  image = cv2.resize(image,(800,800))
+  cv2.imwrite('temp.jpg', image)
+
+  if brightnessValue != 0.00:
+    brightness_control('temp.jpg',brightnessValue)
+
+  if contrastValue != 0.00:
+    contrast_control('temp.jpg',contrastValue)
+
+  if saturationValue != 0.00:
+    saturation_control('temp.jpg',saturationValue)
+
+  if hueValue != 0.00:
+    hue_control('temp.jpg',hueValue)
+
+  if vignetteValue != 0.00:
+    vignette_control('temp.jpg',vignetteValue)
+    
+  if sharpenValue != 0.00:
+    sharpen_control('temp.jpg',sharpenValue)
+
+  if len(effectList) != 0:
+    if 'Cartoon' in effectList:
+      cartoon_effect('temp.jpg')
+
+    if 'Edge' in effectList:
+      edge_filter('temp.jpg')
+
+    if 'Vintage' in effectList:
+      vintage_filter('temp.jpg')
+
+    if 'Blur' in effectList:
+      blur_filter('temp.jpg')
+
+    if 'Black & White' in effectList:
+      blackwhite_filter('temp.jpg')
+
+    if 'Monochrome' in effectList:
+      monochrome_filter('temp.jpg')
+
+  im = Image.open('temp.jpg')
+  data = io.BytesIO()
+  im.save(data, "JPEG")
+  encoded_img_data = base64.b64encode(data.getvalue())
+  my_str = encoded_img_data.decode('utf-8')
+  return my_str
+#######################################################################################
+
+
+#######################################################################################
+#Replicate.com 
+#1) Restore Image
+#app = replicate.Client(api_token="r8_XSxDOhlH9rJYRVskdoMjqxmIfKkZYUP1vgnWy")
+
+os.environ["REPLICATE_API_TOKEN"] = "r8_XSxDOhlH9rJYRVskdoMjqxmIfKkZYUP1vgnWy"
+
+def restore_image(image):
+  image = cv2.cvtColor(numpy.array(image), cv2.COLOR_RGB2BGR)
+  print(image)
+  output = replicate.run(
+    "tencentarc/gfpgan:9283608cc6b7be6b65a8e44983db012355fde4132009bf99d976b2f0896856a3",
+    input={"image": image}
+  )
+  return output
