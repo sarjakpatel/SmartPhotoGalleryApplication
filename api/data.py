@@ -49,7 +49,8 @@ face_cascade = cv2.CascadeClassifier(cascade_file_path)
 
 app = replicate.Client(api_token="r8_daJhrGf2aItg54dmXvEohNelrWaNeq72OKBrG")
 
-openai.api_key = "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"
+#change this
+openai.api_key = ""
 
 
 
