@@ -383,15 +383,6 @@ def apply_filter():
         img = photoEditor(image, 0, 0, 0, 0, 0, 0, '')
         return jsonify({'Output': img}), 200
 
-@app.route('/image-restoration', methods = ['POST'])
-@isAuthenticated
-def image_restoration():
-    image = Image.open(request.files['file'])
-    if image is None:
-        return jsonify({'message': 'upload file'}), 400
-    else:
-        img = restore_image(image)
-        return jsonify({'Output': img}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -741,6 +741,7 @@ def photoEditor(imageInput, brightnessValue, contrastValue, saturationValue, hue
   im.save(data, "JPEG")
   encoded_img_data = base64.b64encode(data.getvalue())
   my_str = encoded_img_data.decode('utf-8')
+<<<<<<< HEAD
   return my_str
 #######################################################################################
 
@@ -760,3 +761,6 @@ def restore_image(image):
     input={"image": image}
   )
   return output
+=======
+  return my_str
+>>>>>>> 2ed20cf (commit)
