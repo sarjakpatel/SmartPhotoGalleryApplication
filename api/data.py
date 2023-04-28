@@ -737,30 +737,4 @@ def photoEditor(imageInput, brightnessValue, contrastValue, saturationValue, hue
       monochrome_filter('temp.jpg')
 
   im = Image.open('temp.jpg')
-  data = io.BytesIO()
-  im.save(data, "JPEG")
-  encoded_img_data = base64.b64encode(data.getvalue())
-  my_str = encoded_img_data.decode('utf-8')
-<<<<<<< HEAD
-  return my_str
-#######################################################################################
-
-
-#######################################################################################
-#Replicate.com 
-#1) Restore Image
-#app = replicate.Client(api_token="r8_XSxDOhlH9rJYRVskdoMjqxmIfKkZYUP1vgnWy")
-
-os.environ["REPLICATE_API_TOKEN"] = "r8_XSxDOhlH9rJYRVskdoMjqxmIfKkZYUP1vgnWy"
-
-def restore_image(image):
-  image = cv2.cvtColor(numpy.array(image), cv2.COLOR_RGB2BGR)
-  print(image)
-  output = replicate.run(
-    "tencentarc/gfpgan:9283608cc6b7be6b65a8e44983db012355fde4132009bf99d976b2f0896856a3",
-    input={"image": image}
-  )
-  return output
-=======
-  return my_str
->>>>>>> 2ed20cf (commit)
+  return im
