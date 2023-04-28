@@ -353,16 +353,22 @@ def image_sketch():
 def generate_image():
 
     text = request.form.get('text')
+    
+    try:
 
-    output = generate_image1(text)
+        output = generate_image1(text)
 
-    # Save the image to a BytesIO buffer
-    buffer = BytesIO()
-    output.save(buffer, format="JPEG")
-    buffer.seek(0)
+        # Save the image to a BytesIO buffer
+        buffer = BytesIO()
+        output.save(buffer, format="JPEG")
+        buffer.seek(0)
 
-    # Return the image file in the response
-    return send_file(buffer, mimetype="image/jpeg")
+        # Return the image file in the response
+        return send_file(buffer, mimetype="image/jpeg")
+    
+    except:
+        return jsonify({'Output': "Access Error"}), 400
+
 
     #return jsonify({'image': output})
 
