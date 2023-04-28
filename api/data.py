@@ -6,7 +6,6 @@ from PIL import Image
 from fer import FER
 from deepface import DeepFace
 import requests
-import numpy
 import PIL
 #to store encodings
 import firebase_admin
@@ -17,18 +16,24 @@ import pyrebase
 import base64
 import os
 import io
-
-try:  
-    from PIL import Image
-except ImportError:  
-    import Image
-    
+import tensorflow as tf
+import replicate
+from transformers import ViltProcessor, ViltForQuestionAnswering
+import torch
+from torchvision import transforms
 import pytesseract
+import scipy.ndimage
+import matplotlib.pyplot as plt
+import openai
+
+
 pytesseract.pytesseract.tesseract_cmd = r'Tesseract-OCR\tesseract.exe'
+
 
 cred_file_path = "fbAdminConfig.json"
 cred = credentials.Certificate(cred_file_path)
 firebase_admin.initialize_app(cred)
+
 
 # this connects to our Firestore database
 db = firestore.client() 
@@ -36,9 +41,18 @@ db = firestore.client()
 firebase = pyrebase.initialize_app(json.load(open('fbconfig.json')))
 storage = firebase.storage()
 
+
 #cascade_file_path = "C:/Users/HP/Downloads/data/haarcascades/haarcascade_frontalface_alt2.xml"
 cascade_file_path = r"cascades/data/haarcascades/haarcascade_frontalface_alt2.xml"
 face_cascade = cv2.CascadeClassifier(cascade_file_path)
+
+
+app = replicate.Client(api_token="r8_daJhrGf2aItg54dmXvEohNelrWaNeq72OKBrG")
+
+#change this
+openai.api_key = ""
+
+
 
 def compute_face_encodings(input):
 
@@ -83,6 +97,8 @@ def compute_face_encodings(input):
     else:
         
         return []#returns ndarray
+
+
 
 
 def store_cropped_image(email, image_url, token):
@@ -187,6 +203,8 @@ def store_cropped_image(email, image_url, token):
         return [], []
 
 
+
+
 def search_similar_image(email, image_url):
 
     faces = compute_face_encodings(image_url)
@@ -257,6 +275,7 @@ def search_similar_image(email, image_url):
 
 
 
+
 def check_encodings(email, image_url, token):
 
     urls, keys, is_match, flag = search_similar_image(email, image_url)
@@ -289,25 +308,25 @@ def check_encodings(email, image_url, token):
 
             return True
 
+
+
+
 def deblur_image1(input_image):
 
-    image = cv2.cvtColor(numpy.array(input_image), cv2.COLOR_RGB2BGR)
-    #image = cv2.imread('input.jpg')
+    image = cv2.cvtColor(numpy.array(input_image), cv2.COLOR_BGR2RGB)
+ 
 
-    kernel = numpy.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
+    kernel = numpy.array([[0,-1,0], [-1,5,-1], [0,-1,0]])
 
     sharpened = cv2.filter2D(image, -1, kernel)
-    print(type(sharpened))
-    img = PIL.Image.fromarray(sharpened)
 
-    data = io.BytesIO()
-    img.save(data, "JPEG")
-    encoded_img_data = base64.b64encode(data.getvalue())
-    cv2.imwrite('sharpened.jpg', sharpened)
-    my_str = encoded_img_data.decode('utf-8')
-    return my_str
-    #return 'sharpened.jpg'
-    
+    img = cv2.cvtColor(sharpened, cv2.COLOR_BGR2RGB)
+    img = PIL.Image.fromarray(img)
+
+    return img
+
+
+
 
 def ocr_core(filename):  
     """
@@ -316,6 +335,9 @@ def ocr_core(filename):
     text = pytesseract.image_to_string(Image.open(filename))  # We'll use Pillow's Image class to open the image and pytesseract to detect the string in the image
     return text
 
+
+
+
 def compute_emotion(input):
     detector = FER(mtcnn=True)
     img = cv2.cvtColor(numpy.array(input), cv2.COLOR_RGB2BGR)
@@ -323,26 +345,9 @@ def compute_emotion(input):
     print(emotion)
     dominant_emotion = detector.top_emotion(img)
     return dominant_emotion
-'''
-def deblur_image1(input_image):
 
-    image = cv2.cvtColor(numpy.array(input_image), cv2.COLOR_RGB2BGR)
-    #image = cv2.imread('input.jpg')
 
-    kernel = numpy.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
 
-    sharpened = cv2.filter2D(image, -1, kernel)
-    print(type(sharpened))
-    img = PIL.Image.fromarray(sharpened)
-
-    data = io.BytesIO()
-    img.save(data, "JPEG")
-    encoded_img_data = base64.b64encode(data.getvalue())
-    cv2.imwrite('sharpened.jpg', sharpened)
-    my_str = encoded_img_data.decode('utf-8')
-    return my_str
-    #return 'sharpened.jpg'
-'''
 def analyze_face(input):
     img = cv2.cvtColor(numpy.array(input), cv2.COLOR_RGB2BGR)
     face_analysis = DeepFace.analyze(img_path = img, enforce_detection=False)
@@ -352,3 +357,182 @@ def analyze_face(input):
         "Emotion : " + str.capitalize(face_analysis[0]['dominant_emotion']),
         "Gender : " + face_analysis[0]['dominant_gender']
     ]
+
+
+
+
+
+
+#https://replicate.com/sanzgiri/cartoonify
+def image_cartoonify1(image, reuse = True):
+
+    image.save(r'output/cartoonify.jpg')
+    input_img = r'output/cartoonify.jpg'
+    path = open(input_img, "rb")
+    
+    output = app.run("sanzgiri/cartoonify:a6f24cf966b84dc3959b9c84f6f5739287b243bc85d5d2f5fb0a9ca9eb6a0f0a",
+    input= {"infile": path})
+    #os.remove('img.jpg')
+
+    img = Image.open(requests.get(output, stream=True).raw)
+    #print(output)
+    return img
+
+
+
+
+#https://huggingface.co/dandelin/vilt-b32-finetuned-vqa
+def image_question1(image, question):
+
+    # prepare image + question
+    url = "http://images.cocodataset.org/val2017/000000039769.jpg"
+    #image = Image.open(requests.get(url, stream=True).raw)
+    #text = "How many cats are there?"
+    #print(type(image))
+
+    processor = ViltProcessor.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
+    model = ViltForQuestionAnswering.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
+
+    # prepare inputs
+    encoding = processor(image, question, return_tensors="pt")
+
+    # forward pass
+    outputs = model(**encoding)
+    logits = outputs.logits
+    idx = logits.argmax(-1).item()
+    print("Predicted answer:", model.config.id2label[idx])
+    result = model.config.id2label[idx]
+
+    print(result)
+
+    return result
+
+
+
+
+#image = r"C:\Users\HP\OneDrive\Documents\Snapchat-644617226.jpg"
+#photo_to_sketch(image)
+
+
+
+
+#https://huggingface.co/spaces/eugenesiow/remove-bg/blob/main/app.py
+def remove_img_bg(image):
+
+    def make_transparent_foreground(pic, mask):
+        # split the image into channels
+        b, g, r = cv2.split(numpy.array(pic).astype('uint8'))
+        # add an alpha channel with and fill all with transparent pixels (max 255)
+        a = numpy.ones(mask.shape, dtype='uint8') * 255
+        # merge the alpha channel back
+        alpha_im = cv2.merge([b, g, r, a], 4)
+        # create a transparent background
+        bg = numpy.zeros(alpha_im.shape)
+        # setup the new mask
+        new_mask = numpy.stack([mask, mask, mask, mask], axis=2)
+        # copy only the foreground color pixels from the original image where mask is set
+        foreground = numpy.where(new_mask, alpha_im, bg).astype(numpy.uint8)
+
+        return foreground
+
+
+    def remove_background(input_image):
+        preprocess = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+
+        input_tensor = preprocess(input_image)
+        input_batch = input_tensor.unsqueeze(0)  # create a mini-batch as expected by the model
+
+        # move the input and model to GPU for speed if available
+        if torch.cuda.is_available():
+            input_batch = input_batch.to('cuda')
+            model.to('cuda')
+
+        with torch.no_grad():
+            output = model(input_batch)['out'][0]
+        output_predictions = output.argmax(0)
+
+        # create a binary (black and white) mask of the profile foreground
+        mask = output_predictions.byte().cpu().numpy()
+        background = numpy.zeros(mask.shape)
+        bin_mask = numpy.where(mask, 255, background).astype(numpy.uint8)
+
+        foreground = make_transparent_foreground(input_image, bin_mask)
+
+        return foreground, bin_mask
+
+
+    def inference(img):
+        print(type(img))
+        #image = Image.open(img)
+        foreground, _ = remove_background(img)
+
+        PIL_image = Image.fromarray(numpy.uint8(foreground)).convert('RGB')
+        PIL_image.save(r'output/remove_bg_image.jpg')
+        return PIL_image
+
+    model = torch.hub.load('pytorch/vision:v0.6.0', 'deeplabv3_resnet101', pretrained=True)
+    model.eval()
+    result_img = inference(image)
+
+
+
+    return result_img
+
+
+#image = "cartoonify.jpg"
+#image = Image.open(image)
+#print(inference(image))
+
+
+
+#https://github.com/rra94/sketchify/blob/master/sketchify.ipynb
+def img_sketch(image):
+
+    def dodge(front,back):
+
+        result = front * 255 / (255 - back) 
+        result[result > 255] = 255
+        result[back == 255] = 255
+        
+        return result.astype('uint8')
+
+    def grayscale(rgb):
+        
+        return numpy.dot(rgb[...,:3], [0.299, 0.587, 0.114])
+  
+    s = cv2.cvtColor(numpy.array(image), cv2.COLOR_RGB2BGR)
+    
+    g = grayscale(s)
+    i = 255 - g
+  
+    b = scipy.ndimage.filters.gaussian_filter(i, sigma = 10)
+    
+    r = dodge(b, g)
+
+    img = PIL.Image.fromarray(r)
+    #cv2.imwrite('output/img-sketch.jpg', r)
+
+    #data = io.BytesIO()
+    #img.save(data, "JPEG")
+    #encoded_img_data = base64.b64encode(data.getvalue())
+
+    #my_str = encoded_img_data.decode('utf-8')
+    #return my_str
+    return img
+
+
+
+def generate_image1(text):
+
+    response = openai.Image.create(prompt=text, n=1, size="1024x1024")
+
+    image_url = response['data'][0]['url']
+
+    img = Image.open(requests.get(image_url, stream=True).raw)
+
+    #img.save('img.jpg')
+
+    return img
