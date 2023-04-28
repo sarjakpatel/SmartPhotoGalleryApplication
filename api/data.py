@@ -14,6 +14,7 @@ import json
 import pyrebase
 import replicate
 import base64
+import numpy
 import os
 import io
 import tensorflow as tf
@@ -737,4 +738,14 @@ def photoEditor(imageInput, brightnessValue, contrastValue, saturationValue, hue
       monochrome_filter('temp.jpg')
 
   im = Image.open('temp.jpg')
-  return im
+  # Convert image to bytes
+  img_bytes = io.BytesIO()
+  im.save(img_bytes, format='JPEG')
+  img_bytes = img_bytes.getvalue()
+
+  # Encode bytes as base64 string
+  img_b64 = base64.b64encode(img_bytes).decode()
+
+  # Put base64 string in JSON object
+  json_obj = {'image': img_b64}
+  return json_obj
