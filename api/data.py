@@ -542,6 +542,7 @@ def generate_image1(text):
 
 #Brightness
 def brightness_control(image_path,brightness):
+  print(type(image_path))
   brightness = int(((brightness + 127)*(127 + 127)/(100 + 100)) - 127)
   image = cv2.cvtColor(numpy.array(image_path), cv2.COLOR_RGB2BGR)
   if brightness > 0:
@@ -695,57 +696,46 @@ def monochrome_filter(image_path):
 def photoEditor(imageInput, brightnessValue, contrastValue, saturationValue, hueValue, vignetteValue, sharpenValue, effectList):
   #image_inp = Image.fromarray(imageInput)
   #image_inp.save("temp.jpg") 
-
   image = cv2.cvtColor(numpy.array(imageInput), cv2.COLOR_RGB2BGR)
   image = cv2.resize(image,(800,800))
   cv2.imwrite('temp.jpg', image)
 
   if brightnessValue != 0.00:
-    brightness_control('temp.jpg',brightnessValue)
+    brightness_control(image, brightnessValue)
 
   if contrastValue != 0.00:
-    contrast_control('temp.jpg',contrastValue)
+    contrast_control(image,contrastValue)
 
   if saturationValue != 0.00:
-    saturation_control('temp.jpg',saturationValue)
+    saturation_control(image,saturationValue)
 
   if hueValue != 0.00:
-    hue_control('temp.jpg',hueValue)
+    hue_control(image,hueValue)
 
   if vignetteValue != 0.00:
-    vignette_control('temp.jpg',vignetteValue)
+    vignette_control(image,vignetteValue)
     
   if sharpenValue != 0.00:
-    sharpen_control('temp.jpg',sharpenValue)
+    sharpen_control(image,sharpenValue)
 
   if len(effectList) != 0:
     if 'Cartoon' in effectList:
-      cartoon_effect('temp.jpg')
+      cartoon_effect(image)
 
     if 'Edge' in effectList:
-      edge_filter('temp.jpg')
+      edge_filter(image)
 
     if 'Vintage' in effectList:
-      vintage_filter('temp.jpg')
+      vintage_filter(image)
 
     if 'Blur' in effectList:
-      blur_filter('temp.jpg')
+      blur_filter(image)
 
     if 'Black & White' in effectList:
-      blackwhite_filter('temp.jpg')
+      blackwhite_filter(image)
 
     if 'Monochrome' in effectList:
-      monochrome_filter('temp.jpg')
+      monochrome_filter(image)
 
   im = Image.open('temp.jpg')
-  # Convert image to bytes
-  img_bytes = io.BytesIO()
-  im.save(img_bytes, format='JPEG')
-  img_bytes = img_bytes.getvalue()
-
-  # Encode bytes as base64 string
-  img_b64 = base64.b64encode(img_bytes).decode()
-
-  # Put base64 string in JSON object
-  json_obj = {'image': img_b64}
-  return json_obj
+  return im

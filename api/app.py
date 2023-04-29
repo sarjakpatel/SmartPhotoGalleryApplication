@@ -369,11 +369,31 @@ def generate_image():
 @isAuthenticated
 def apply_filter():
     image = Image.open(request.files['file'])
+    brightness_control = int(request.form.get('brightness_control'))
+    contrast_control = int(request.form.get('contrast_control'))
+    saturation_control = int(request.form.get('saturation_control'))
+    hue_control = int(request.form.get('hue_control'))
+    vignette_control = int(request.form.get('vignette_control'))
+    sharpen_control = int(request.form.get('sharpen_control'))
+    effect_control = request.form.get('effect_control')
     if image is None:
         return jsonify({'message': 'upload file'}), 400
     else:
-        img = photoEditor(image, 0, 0, 0, 0, 0, 0, '')
-        return jsonify({'Output': img}), 200
+        try:
+
+            img = photoEditor(image, brightness_control, contrast_control, saturation_control, hue_control, vignette_control, sharpen_control, effect_control)
+            buffer = BytesIO()
+            img.save(buffer, format="JPEG")
+            buffer.seek(0)
+            
+            # Return the image file in the response
+            return send_file(buffer, mimetype="image/jpeg")
+            #return jsonify({'Output': img}), 200
+        except:
+            return jsonify({'Brightness' : brightness_control, 'Contrast' : contrast_control,
+                            'Saturation' : saturation_control, 'Hue' : hue_control,
+                            'Vignette' : vignette_control, 'Sharpen' : sharpen_control,
+                            'Effect' : effect_control}), 400
 
 
 if __name__ == '__main__':
