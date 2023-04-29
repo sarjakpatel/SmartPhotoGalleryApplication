@@ -15,8 +15,6 @@ from flask_cors import CORS
 import pyrebase
 from werkzeug.utils import secure_filename
 
-#from face_encodings import search_similar_image, store_encodings, check_face_encodings
-#from data import check_encodings, search_similar_image, deblur_image1, ocr_core, compute_emotion, analyze_face
 from data import *
 
 from PIL import Image
@@ -219,9 +217,8 @@ def face_analysis():
     if image is None:
         return jsonify({'message': 'upload file'}), 400
     return jsonify({'Face Analysis': analyze_face(image)}), 200
-        
 
-    
+   
 @app.route('/emotion-detection', methods = ['POST'])
 @isAuthenticated
 def detect_emotion():
@@ -230,8 +227,6 @@ def detect_emotion():
         return jsonify({'message': 'upload file'}), 400
     return jsonify({'emotion detected' : compute_emotion(image)}), 200
         
-
-
 
 @app.route('/text-extraction', methods = ['POST'])
 
@@ -324,7 +319,6 @@ def remove_bg():
         return send_file(buffer, mimetype="image/jpeg")
 
 
-
 @app.route('/image-sketch', methods = ['POST'])
 #output in 5 seconds
 def image_sketch():
@@ -344,8 +338,6 @@ def image_sketch():
 
         # Return the image file in the response
         return send_file(buffer, mimetype="image/jpeg")
-
-
 
 
 @app.route('/generate-image', methods=['POST'])
@@ -372,6 +364,36 @@ def generate_image():
 
     #return jsonify({'image': output})
 
+
+@app.route('/image-filter', methods = ['POST'])
+@isAuthenticated
+def apply_filter():
+    image = Image.open(request.files['file'])
+    brightness_control = int(request.form.get('brightness_control'))
+    contrast_control = int(request.form.get('contrast_control'))
+    saturation_control = int(request.form.get('saturation_control'))
+    hue_control = int(request.form.get('hue_control'))
+    vignette_control = int(request.form.get('vignette_control'))
+    sharpen_control = int(request.form.get('sharpen_control'))
+    effect_control = request.form.get('effect_control')
+    if image is None:
+        return jsonify({'message': 'upload file'}), 400
+    else:
+        try:
+
+            img = photoEditor(image, brightness_control, contrast_control, saturation_control, hue_control, vignette_control, sharpen_control, effect_control)
+            buffer = BytesIO()
+            img.save(buffer, format="JPEG")
+            buffer.seek(0)
+            
+            # Return the image file in the response
+            return send_file(buffer, mimetype="image/jpeg")
+            #return jsonify({'Output': img}), 200
+        except:
+            return jsonify({'Brightness' : brightness_control, 'Contrast' : contrast_control,
+                            'Saturation' : saturation_control, 'Hue' : hue_control,
+                            'Vignette' : vignette_control, 'Sharpen' : sharpen_control,
+                            'Effect' : effect_control}), 400
 
 
 if __name__ == '__main__':
