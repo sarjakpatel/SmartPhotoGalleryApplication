@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { Button } from 'react-bootstrap';
-import { projectStorage, projectFirestore, timestamp } from '../firebase/config';
+import { projectFirestore } from '../firebase/config';
 import FaceGrid from './FaceGrid';
 import ImageGrid from './ImageGrid';
 import Modal from './Modal';
+import { motion } from 'framer-motion';
 
 const Classify = () => {
 
@@ -12,11 +13,14 @@ const Classify = () => {
     const [selectedFaceIndex, setSelectedFaceIndex] = useState(null);
     const [image, setImage] = useState(null);
     const [selectedImg, setSelectedImg] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         
         console.log("Getting cropped picures from firebase");
-
+        
+        setLoading(true);
+        
         projectFirestore.collection('userDetails/'+localStorage.getItem('email') + '/data').doc('cropped_face_url').get()
         .then((snapshot) => {
          
@@ -29,6 +33,7 @@ const Classify = () => {
                 document.push({ "id" : key, "url" : data[key]});
             })
             setDocs(document);
+            setLoading(false);
           })
         
       }, []);
@@ -37,7 +42,9 @@ const Classify = () => {
     useEffect(() => {
         
         if(selectedFaceIndex !== undefined){
-            console.log("Getting cropped picures from firebase");
+            
+          console.log("Getting cropped picures from firebase");
+            setLoading(true);
 
             projectFirestore.collection('userDetails/'+localStorage.getItem('email') + '/data').doc('image_urls').get()
             .then((snapshot) => {
@@ -46,6 +53,7 @@ const Classify = () => {
 
                 var document = data.map((e, index) => ({'id': index, "url": e}));
                 setImage(document);
+                setLoading(false);
               })
             }
       }, [selectedFaceIndex]);
@@ -57,9 +65,12 @@ const Classify = () => {
             {image && <Button type="submit" className="btn-primary mt-2" id="login-btn" onClick={() => setImage(null)}>Back</Button>}
 
             {image && <ImageGrid images = {image} setSelectedImg={setSelectedImg} />}
-			{ selectedImg && (
-				<Modal selectedImg={selectedImg} setSelectedImg={setSelectedImg} />
-			)}
+            { selectedImg && (
+              <Modal selectedImg={selectedImg} setSelectedImg={setSelectedImg} />
+            )}
+            {loading && <motion.div className="loader-container" initial={{ opacity: 0 }} animate={{ opacity: 3 }}>
+                    <motion.div className="spinner"></motion.div>
+            </motion.div>}
         </div>
       );
 }
