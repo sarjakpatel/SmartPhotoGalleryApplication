@@ -1,6 +1,5 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&display=swap');
-
+/* Import Google font - Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 /* body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -27,6 +26,7 @@ code {
 body{
   font-family: "Noto Serif";
   color: var(--secondary);
+  /* background: #E3F2FD; */
 } 
 .App{
   max-width: 960px;
@@ -47,34 +47,35 @@ body{
 }
 
 /* upload form styles */
-form{
+.uploadImgForm{
   margin: 30px auto 10px;
   text-align: center;
 }
-label input{
+.uploadImgLabel input{
   height: 0;
   width: 0;
   opacity: 0;
 }
-label{
+.uploadImgLabel{
   display: block;
   width: 30px;
   height: 30px;
   border: 1px solid var(--primary);
   border-radius: 50%;
   margin: 10px auto;
-  line-height: 30px;
+  line-height: 26px;
   color: var(--primary);
   font-weight: bold;
   font-size: 24px;
 }
-label:hover{
+.uploadImgLabel:hover{
   background: var(--primary);
   color: white;
 }
 .output{
   height: 60px;
   font-size: 0.8rem;
+  text-align: center;
 }
 .error{
   color: var(--error);
@@ -129,6 +130,37 @@ label:hover{
   border: 3px solid white;
 }
 
+.loader-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 6px solid;
+  border-color: #e0d7d7 transparent;
+  border-radius: 50%;
+  animation: spin-anim 2s linear infinite;
+  position: fixed;
+  top:-100%; right:-100%; left:-100%; bottom:-100%;
+  margin:auto;
+  z-index:0;
+}
+
+@keyframes spin-anim {
+  0% {
+      transform: rotate(0deg);
+  }
+  100% {
+      transform: rotate(360deg);
+  }
+}
+
 .abc{
   text-decoration: none;
   color: #fcfcfc;
@@ -143,6 +175,7 @@ label:hover{
   text-decoration: none;
   transform: translateY(4px);
 }
+
 .abc:focus{
   color: #db2828;
   text-decoration: none;
@@ -155,8 +188,6 @@ label:hover{
   width: 100%;
   max-width: 400px;
 }
-
-
 .container .btn {
   position: absolute;
   top: 50%;
@@ -172,7 +203,207 @@ label:hover{
   border-radius: 5px;
   text-align: center;
 }
-
 .container .btn:hover {
   background-color: black;
 } */
+
+
+
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+.filterBody{
+  display: flex;
+  padding: 10px;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  /* background: #E3F2FD; */
+}
+.filterContainer{
+  width: 850px;
+  padding: 30px 35px 35px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+/* .editor-panel{
+  background: #e2e2e2;
+} */
+.filterContainer.disable .editor-panel,
+.filterContainer.disable .filterControls .reset-filter,
+.filterContainer.disable .filterControls .save-img{
+  opacity: 0.5;
+  pointer-events: none;
+}
+.filterContainer h2{
+  margin-top: -8px;
+  font-size: 22px;
+  font-weight: 500;
+  padding-left: 10px;
+  padding-top: 20px;
+}
+.filterContainer .filterWrapper{
+  display: flex;
+  margin: 20px 0;
+  min-height: 335px;
+}
+.filterWrapper .editor-panel{
+  padding: 15px 20px;
+  width: 280px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+.editor-panel .title{
+  display: block;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+.editor-panel .options, .controls{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+/* .editor-panel button{
+  outline: none;
+  height: 40px;
+  font-size: 14px;
+  color: #6C757D;
+  background: #fff;
+  border-radius: 3px;
+  margin-bottom: 8px;
+  border: 1px solid #aaa;
+}
+.editor-panel .filter button{
+  width: calc(100% / 2 - 4px);
+}
+.editor-panel button:hover{
+  background: #f5f5f5;
+} */
+.filterWrapper button.active{
+  color: #fff;
+  border-color: #5372F0;
+  background: #5372F0;
+}
+.filterWrapper .slider{
+  margin-top: 12px;
+}
+.filterWrapper .slider .filter-info{
+  display: flex;
+  color: #464646;
+  font-size: 14px;
+  justify-content: space-between;
+}
+.filterWrapper .slider input{
+  width: 100%;
+  height: 5px;
+  accent-color: #5372F0;
+}
+/* .editor-panel .rotate{
+  margin-top: 17px;
+}
+.editor-panel .rotate button{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(100% / 4 - 3px);
+}
+.rotate .options button:nth-child(3),
+.rotate .options button:nth-child(4){
+  font-size: 18px;
+}
+.rotate .options button:active{
+  color: #fff;
+  background: #5372F0;
+  border-color: #5372F0;
+} */
+.filterWrapper .preview-img{
+  flex-grow: 1;
+  display: flex;
+  overflow: hidden;
+  margin-left: 20px;
+  border-radius: 5px;
+  align-items: center;
+  justify-content: center;
+}
+.preview-img img{
+  max-width: 490px;
+  max-height: 335px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.filterControls button{
+  padding: 11px 20px;
+  font-size: 14px;
+  border-radius: 3px;
+  outline: none;
+  color: #fff;
+  cursor: pointer;
+  background: none;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+.filterControls .reset-filter{
+  color: #6C757D;
+  border: 1px solid #6C757D;
+  margin-left: 35px;
+}
+/* .filterControls .reset-filter:hover{
+  color: #fff;
+  background: #6C757D;
+} */
+.filterControls .apply-filter{
+  /* color: #6C757D; */
+  border: 1px solid #6C757D;
+  background: #ec7171;
+  margin-left: 35px;
+}
+/* .filterControls .apply-filter:hover{
+  color: #fff;
+  background: #6C757D;
+} */
+.filterControls .choose-img{
+  background: #6C757D;
+  border: 1px solid #6C757D;
+  margin-left: 35px;
+}
+.filterControls .save-img{
+  margin-left: 35px;
+  background: #5372F0;
+  border: 1px solid #5372F0;
+}
+
+@media screen and (max-width: 760px) {
+  .filterContainer{
+    padding: 25px;
+  }
+  .filterContainer .filterWrapper{
+    flex-wrap: wrap-reverse;
+  }
+  .filterWrapper .editor-panel{
+    width: 100%;
+  }
+  .filterWrapper .preview-img{
+    width: 100%;
+    margin: 0 0 15px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .filterControls button{
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  .filterControls .filterRow{
+    width: 100%;
+  }
+  .filterControls .filterRow .save-img{
+    margin-left: 0px;
+  }
+}
+
+

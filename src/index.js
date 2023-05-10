@@ -16,6 +16,13 @@ import SearchImage from './comps/SearchImage';
 import TextExtraction from './comps/TextExtraction';
 import EmotionDetection from './comps/EmotionDetection';
 import Classify from './comps/Classify';
+import MoreFeatures from './comps/MoreFeatures';
+import RemoveBackground from './comps/RemoveBackground';
+import Cartoonify from './comps/Cartoonify';
+import DeblurImage from './comps/DeblurImage';
+import ImageSketch from './comps/ImageSketch';
+import GenerateImage from './comps/GenerateImage';
+import ImageFilter from './comps/ImageFilter';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -53,11 +60,49 @@ root.render(
 							<TextExtraction />
 						</ProtectedRoute>
 					} />
-					<Route path='OCR' element={
+
+					<Route path='more-features' element={
 						<ProtectedRoute>
-							<Home />
+							<MoreFeatures />
 						</ProtectedRoute>
 					} />
+
+					<Route path='remove-background' element={
+						<ProtectedRoute>
+							<RemoveBackground />
+						</ProtectedRoute>
+					} />
+
+					<Route path='cartoonify' element={
+						<ProtectedRoute>
+							<Cartoonify />
+						</ProtectedRoute>
+					} />
+					
+					<Route path='deblur-image' element={
+						<ProtectedRoute>
+							<DeblurImage />
+						</ProtectedRoute>
+					} />
+
+					<Route path='image-sketch' element={
+						<ProtectedRoute>
+							<ImageSketch />
+						</ProtectedRoute>
+					} />
+
+					<Route path='generate-image' element={
+						<ProtectedRoute>
+							<GenerateImage />
+						</ProtectedRoute>
+					} />
+
+					<Route path='image-filter' element={
+						<ProtectedRoute>
+							<ImageFilter />
+						</ProtectedRoute>
+					} />
+
 				</Route>
 			</Routes>
 			<ToastContainer

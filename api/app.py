@@ -77,8 +77,6 @@ def signup():
             return jsonify({'message': 'error creating in user'}), 401
 
 
-
-
 #login api
 
 @app.route('/login', methods = ['POST'])
@@ -98,7 +96,6 @@ def login():
         #fetching user details from firebase
         user = firebase.auth().sign_in_with_email_and_password(email, password)
         
-
         #fetch localId of the user to check whether the email id is verified or not
         check_user_local_id = user['localId']
         
@@ -118,14 +115,6 @@ def login():
     except:
         return jsonify({'message':'invalid crendentails or user does not exist'}),403
 
-'''
-#logout api
-@app.route("/logout")
-def logout():
-    #remove the token setting the user to None
-    session.pop('username')
-    return redirect("/login")
-'''
 
 
 #to protect routes
@@ -182,17 +171,11 @@ def search_similar_image1():
     
     token = request.form.get('user-token')
     email = request.form.get('email')
-    #email = 'rajvi.shah@sjsu.edu'
-    #file = request.files['file']
-    # print(request)
+   
     print(email)
-    # print(type(request.files['file']))
-    image = Image.open(request.files['file'])
-    # print(type(image))
-    # print(image)
     
-    # img_matrix = cv2.imdecode(numpy.fromstring(request.files['file'].read(), numpy.uint8), cv2.IMREAD_UNCHANGED)
-
+    image = Image.open(request.files['file'])
+   
     if email is None and image is None:
         return jsonify({'message': 'email must not to be empty and upload file'}), 400
     
@@ -264,6 +247,7 @@ def deblur_image():
 @app.route('/image-cartoonify', methods = ['POST'])
 
 def image_cartoonify():
+    print("Cartoonify called...")
     image = Image.open(request.files['file'])
     if image is None:
         return jsonify({'message': 'upload file'}), 400
@@ -348,7 +332,7 @@ def generate_image():
     
     try:
 
-        output = generate_image1(text)
+        output = image_generator(text)
 
         # Save the image to a BytesIO buffer
         buffer = BytesIO()
@@ -376,6 +360,8 @@ def apply_filter():
     vignette_control = int(request.form.get('vignette_control'))
     sharpen_control = int(request.form.get('sharpen_control'))
     effect_control = request.form.get('effect_control')
+
+    print("Brighntess ", brightness_control , " contrast " , contrast_control , " saturation " , saturation_control , " hue " , hue_control , " vignette " , vignette_control , " sharpen " , sharpen_control , " effect " , effect_control)
     if image is None:
         return jsonify({'message': 'upload file'}), 400
     else:

@@ -410,13 +410,6 @@ def image_question1(image, question):
 
 
 
-
-#image = r"C:\Users\HP\OneDrive\Documents\Snapchat-644617226.jpg"
-#photo_to_sketch(image)
-
-
-
-
 #https://huggingface.co/spaces/eugenesiow/remove-bg/blob/main/app.py
 def remove_img_bg(image):
 
@@ -466,7 +459,7 @@ def remove_img_bg(image):
 
 
     def inference(img):
-        print(type(img))
+        #print(type(img))
         #image = Image.open(img)
         foreground, _ = remove_background(img)
 
@@ -481,12 +474,6 @@ def remove_img_bg(image):
 
 
     return result_img
-
-
-#image = "cartoonify.jpg"
-#image = Image.open(image)
-#print(inference(image))
-
 
 
 #https://github.com/rra94/sketchify/blob/master/sketchify.ipynb
@@ -526,7 +513,7 @@ def img_sketch(image):
 
 
 
-def generate_image1(text):
+def image_generator(text):
 
     response = openai.Image.create(prompt=text, n=1, size="1024x1024")
 
@@ -537,7 +524,7 @@ def generate_image1(text):
     #img.save('img.jpg')
 
     return img
-#######################################################################################
+
 #applying filters to the image
 
 #Brightness
@@ -697,7 +684,7 @@ def photoEditor(imageInput, brightnessValue, contrastValue, saturationValue, hue
   #image_inp = Image.fromarray(imageInput)
   #image_inp.save("temp.jpg") 
   image = cv2.cvtColor(numpy.array(imageInput), cv2.COLOR_RGB2BGR)
-  image = cv2.resize(image,(800,800))
+  # image = cv2.resize(image,(800,800))
   cv2.imwrite('temp.jpg', image)
 
   if brightnessValue != 0.00:
@@ -731,7 +718,7 @@ def photoEditor(imageInput, brightnessValue, contrastValue, saturationValue, hue
     if 'Blur' in effectList:
       blur_filter(image)
 
-    if 'Black & White' in effectList:
+    if 'BlackWhite' in effectList:
       blackwhite_filter(image)
 
     if 'Monochrome' in effectList:
